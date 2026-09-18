@@ -1,0 +1,14 @@
+page {
+  background: #f5f8f6;
+  color: #17231c;
+  font-family: -apple-system, BlinkMacSystemFont, "PingFang SC", "Microsoft YaHei", sans-serif;
+  font-size: 28rpx;
+}
+
+button::after {
+  border: 0;
+}
+
+.safe-bottom {
+  height: calc(env(safe-area-inset-bottom) + 30rpx);
+}

@@ -1,0 +1,518 @@
+.page-shell {
+  min-height: 100vh;
+  padding: 24rpx;
+  box-sizing: border-box;
+}
+
+.hero {
+  position: relative;
+  overflow: hidden;
+  min-height: 300rpx;
+  padding: 54rpx 42rpx;
+  border-radius: 34rpx;
+  box-sizing: border-box;
+  background: linear-gradient(135deg, #123b29 0%, #1d6547 100%);
+  box-shadow: 0 18rpx 50rpx rgba(21, 76, 52, 0.18);
+  color: #fff;
+}
+
+.hero-badge,
+.eyebrow {
+  color: #8acaaa;
+  font-size: 20rpx;
+  font-weight: 700;
+  letter-spacing: 3rpx;
+}
+
+.hero-title {
+  position: relative;
+  z-index: 2;
+  width: 510rpx;
+  margin-top: 18rpx;
+  font-size: 48rpx;
+  font-weight: 750;
+  line-height: 1.25;
+  letter-spacing: -1rpx;
+}
+
+.hero-title text {
+  color: #b8f1d0;
+}
+
+.hero-copy {
+  position: relative;
+  z-index: 2;
+  width: 510rpx;
+  margin-top: 18rpx;
+  color: rgba(255, 255, 255, 0.7);
+  font-size: 25rpx;
+  line-height: 1.65;
+}
+
+.hero-orbit {
+  position: absolute;
+  border: 2rpx solid rgba(186, 241, 209, 0.15);
+  border-radius: 999rpx;
+}
+
+.orbit-one {
+  width: 300rpx;
+  height: 300rpx;
+  right: -140rpx;
+  top: -110rpx;
+}
+
+.orbit-two {
+  width: 190rpx;
+  height: 190rpx;
+  right: -50rpx;
+  bottom: -120rpx;
+  background: rgba(184, 241, 208, 0.06);
+}
+
+.card {
+  margin-top: 24rpx;
+  padding: 34rpx;
+  border: 1rpx solid rgba(28, 72, 50, 0.07);
+  border-radius: 30rpx;
+  background: #fff;
+  box-shadow: 0 10rpx 36rpx rgba(31, 67, 48, 0.06);
+}
+
+.section-heading,
+.card-title-row,
+.field-row,
+.method-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.section-title {
+  margin-top: 8rpx;
+  font-size: 36rpx;
+  font-weight: 750;
+  line-height: 1.25;
+}
+
+.section-title.small {
+  font-size: 32rpx;
+}
+
+.reset-link {
+  padding: 12rpx 0 12rpx 24rpx;
+  color: #7a8d82;
+  font-size: 24rpx;
+}
+
+.form-grid {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  margin-top: 28rpx;
+}
+
+.field {
+  margin-bottom: 26rpx;
+}
+
+.field.half {
+  width: calc(50% - 10rpx);
+}
+
+.field-label {
+  margin-bottom: 12rpx;
+  color: #53665b;
+  font-size: 24rpx;
+  font-weight: 600;
+}
+
+.input-wrap,
+.picker-value,
+.activity-picker {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  height: 90rpx;
+  padding: 0 24rpx;
+  border: 2rpx solid #e3ebe6;
+  border-radius: 20rpx;
+  box-sizing: border-box;
+  background: #fbfdfb;
+}
+
+.input-wrap input {
+  width: 75%;
+  height: 88rpx;
+  font-size: 30rpx;
+  font-weight: 650;
+}
+
+.unit,
+.chevron {
+  color: #789085;
+  font-size: 24rpx;
+}
+
+.unit-switch {
+  display: flex;
+  gap: 5rpx;
+  padding: 4rpx;
+  border-radius: 12rpx;
+  background: #edf3ef;
+}
+
+.unit-switch text {
+  min-width: 42rpx;
+  padding: 4rpx 8rpx;
+  border-radius: 9rpx;
+  color: #7c8c83;
+  font-size: 19rpx;
+  text-align: center;
+}
+
+.unit-switch .active {
+  background: #fff;
+  color: #1e6547;
+  box-shadow: 0 2rpx 8rpx rgba(30, 101, 71, 0.1);
+}
+
+.activity-field {
+  margin-top: -4rpx;
+}
+
+.activity-picker {
+  height: 108rpx;
+}
+
+.activity-name {
+  font-weight: 700;
+}
+
+.activity-detail {
+  margin-top: 8rpx;
+  color: #829087;
+  font-size: 22rpx;
+}
+
+.primary-button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 98rpx;
+  margin-top: 6rpx;
+  border-radius: 22rpx;
+  background: #1c6848;
+  box-shadow: 0 12rpx 24rpx rgba(28, 104, 72, 0.2);
+  color: #fff;
+  font-size: 29rpx;
+  font-weight: 700;
+  letter-spacing: 1rpx;
+}
+
+.privacy-tip {
+  margin-top: 20rpx;
+  color: #93a199;
+  font-size: 21rpx;
+  text-align: center;
+}
+
+.result-area {
+  padding-top: 40rpx;
+}
+
+.result-heading {
+  padding: 0 10rpx 18rpx;
+}
+
+.goal-pill {
+  padding: 12rpx 22rpx;
+  border-radius: 999rpx;
+  background: #dff4e8;
+  color: #1a6646;
+  font-size: 23rpx;
+  font-weight: 700;
+}
+
+.metric-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 18rpx;
+}
+
+.metric-card {
+  flex: 1;
+  min-width: 190rpx;
+  padding: 28rpx;
+  border: 1rpx solid #e4ebe6;
+  border-radius: 26rpx;
+  box-sizing: border-box;
+  background: #fff;
+}
+
+.metric-card.featured {
+  background: #edf8f1;
+  border-color: #d5ecde;
+}
+
+.metric-label,
+.metric-caption {
+  color: #718078;
+  font-size: 21rpx;
+}
+
+.metric-value {
+  margin-top: 12rpx;
+  font-size: 54rpx;
+  font-weight: 780;
+  line-height: 1;
+}
+
+.metric-value text {
+  margin-left: 4rpx;
+  font-size: 27rpx;
+}
+
+.metric-status,
+.metric-caption {
+  margin-top: 12rpx;
+  font-weight: 650;
+}
+
+.metric-range {
+  margin-top: 14rpx;
+  font-size: 29rpx;
+  font-weight: 750;
+  white-space: nowrap;
+}
+
+.goal-card {
+  display: flex;
+  align-items: flex-start;
+  padding: 30rpx;
+  background: #183d2d;
+  color: #fff;
+}
+
+.goal-mark {
+  flex-shrink: 0;
+  padding: 9rpx 14rpx;
+  border-radius: 12rpx;
+  background: #b8f1d0;
+  color: #183d2d;
+  font-size: 20rpx;
+  font-weight: 800;
+}
+
+.goal-content {
+  margin-left: 24rpx;
+}
+
+.goal-title {
+  font-size: 31rpx;
+  font-weight: 750;
+}
+
+.goal-summary {
+  margin-top: 10rpx;
+  color: rgba(255, 255, 255, 0.72);
+  font-size: 24rpx;
+  line-height: 1.55;
+}
+
+.calorie-total {
+  color: #63766b;
+  font-size: 22rpx;
+}
+
+.calorie-total text {
+  color: #183d2d;
+  font-size: 42rpx;
+  font-weight: 780;
+}
+
+.calorie-meta {
+  display: flex;
+  margin: 28rpx 0;
+  padding: 22rpx 0;
+  border-top: 1rpx solid #edf1ee;
+  border-bottom: 1rpx solid #edf1ee;
+}
+
+.calorie-meta view {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  gap: 8rpx;
+}
+
+.calorie-meta view + view {
+  padding-left: 28rpx;
+  border-left: 1rpx solid #edf1ee;
+}
+
+.calorie-meta text {
+  color: #7d8b83;
+  font-size: 21rpx;
+}
+
+.calorie-meta .strong-text {
+  font-size: 26rpx;
+  font-weight: 700;
+}
+
+.macro-item + .macro-item {
+  margin-top: 24rpx;
+}
+
+.macro-top {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 10rpx;
+  font-size: 24rpx;
+}
+
+.macro-track {
+  overflow: hidden;
+  height: 10rpx;
+  border-radius: 99rpx;
+  background: #eef2ef;
+}
+
+.macro-track view {
+  height: 100%;
+  border-radius: 99rpx;
+}
+
+.protein .macro-track view { background: #2f9566; }
+.carbs .macro-track view { background: #df9e39; }
+.fat .macro-track view { background: #7383cc; }
+
+.quick-targets {
+  display: flex;
+  gap: 12rpx;
+  margin-top: 30rpx;
+}
+
+.quick-targets view {
+  flex: 1;
+  padding: 19rpx 12rpx;
+  border-radius: 16rpx;
+  background: #f5f8f6;
+  color: #53645a;
+  font-size: 22rpx;
+  text-align: center;
+}
+
+.quick-icon {
+  margin-right: 7rpx;
+}
+
+.meal-list {
+  margin-top: 26rpx;
+}
+
+.meal-row {
+  display: flex;
+  padding: 26rpx 0;
+  border-top: 1rpx solid #edf1ee;
+}
+
+.meal-time {
+  width: 105rpx;
+  flex-shrink: 0;
+}
+
+.meal-name {
+  font-size: 26rpx;
+  font-weight: 750;
+}
+
+.meal-percent {
+  margin-top: 6rpx;
+  color: #46a477;
+  font-size: 20rpx;
+  font-weight: 700;
+}
+
+.meal-body {
+  padding-left: 22rpx;
+  border-left: 2rpx solid #dce8e0;
+}
+
+.meal-nutrients {
+  display: flex;
+  flex-direction: column;
+  gap: 7rpx;
+}
+
+.meal-nutrients .strong-text {
+  font-size: 26rpx;
+  font-weight: 700;
+}
+
+.macro-top .strong-text {
+  font-weight: 700;
+}
+
+.meal-nutrients text,
+.meal-suggestion {
+  color: #738179;
+  font-size: 21rpx;
+}
+
+.meal-suggestion {
+  margin-top: 13rpx;
+  line-height: 1.6;
+}
+
+.tip-row {
+  display: flex;
+  align-items: flex-start;
+  margin-top: 24rpx;
+}
+
+.tip-index {
+  display: flex;
+  flex-shrink: 0;
+  align-items: center;
+  justify-content: center;
+  width: 40rpx;
+  height: 40rpx;
+  border-radius: 50%;
+  background: #e5f4eb;
+  color: #20704d;
+  font-size: 20rpx;
+  font-weight: 750;
+}
+
+.tip-text {
+  margin-left: 18rpx;
+  color: #526259;
+  font-size: 24rpx;
+  line-height: 1.65;
+}
+
+.method-card {
+  margin-top: 24rpx;
+  padding: 26rpx 30rpx;
+  border: 1rpx dashed #ccd9d0;
+  border-radius: 24rpx;
+  color: #68786f;
+}
+
+.method-head {
+  font-size: 23rpx;
+  font-weight: 650;
+}
+
+.method-body {
+  display: flex;
+  flex-direction: column;
+  gap: 16rpx;
+  margin-top: 22rpx;
+  padding-top: 22rpx;
+  border-top: 1rpx solid #e2e9e4;
+  font-size: 21rpx;
+  line-height: 1.7;
+}

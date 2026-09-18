@@ -1,0 +1,14 @@
+{
+  "pages": [
+    "pages/index/index"
+  ],
+  "window": {
+    "navigationBarTitleText": "轻体计划",
+    "navigationBarBackgroundColor": "#F6FAF7",
+    "navigationBarTextStyle": "black",
+    "backgroundColor": "#F6FAF7",
+    "backgroundTextStyle": "light"
+  },
+  "sitemapLocation": "sitemap.json",
+  "lazyCodeLoading": "requiredComponents"
+}

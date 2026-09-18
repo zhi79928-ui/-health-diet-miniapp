@@ -1,0 +1,190 @@
+<view class="page-shell">
+  <view class="hero">
+    <view class="hero-badge">PERSONAL NUTRITION</view>
+    <view class="hero-title">算清身体数据，<text>吃得更明白</text></view>
+    <view class="hero-copy">输入基础信息，生成你的体重方向、每日热量和饮食结构。</view>
+    <view class="hero-orbit orbit-one"></view>
+    <view class="hero-orbit orbit-two"></view>
+  </view>
+
+  <view class="card form-card">
+    <view class="section-heading">
+      <view>
+        <view class="eyebrow">STEP 01</view>
+        <view class="section-title">填写身体信息</view>
+      </view>
+      <view class="reset-link" bindtap="reset">清空</view>
+    </view>
+
+    <view class="form-grid">
+      <view class="field half">
+        <view class="field-label">性别</view>
+        <picker range="{{sexOptions}}" range-key="label" value="{{sexIndex}}" bindchange="onSexChange">
+          <view class="picker-value">
+            <text>{{sexOptions[sexIndex].label}}</text>
+            <text class="chevron">⌄</text>
+          </view>
+        </picker>
+      </view>
+
+      <view class="field half">
+        <view class="field-label">年龄</view>
+        <view class="input-wrap">
+          <input type="number" value="{{form.age}}" data-field="age" bindinput="onFieldInput" placeholder="18～80" />
+          <text class="unit">岁</text>
+        </view>
+      </view>
+
+      <view class="field half">
+        <view class="field-label">身高</view>
+        <view class="input-wrap">
+          <input type="digit" value="{{form.heightCm}}" data-field="heightCm" bindinput="onFieldInput" placeholder="例如 180" />
+          <text class="unit">cm</text>
+        </view>
+      </view>
+
+      <view class="field half">
+        <view class="field-row">
+          <view class="field-label">体重</view>
+          <view class="unit-switch">
+            <text class="{{weightUnit === 'jin' ? 'active' : ''}}" data-unit="jin" bindtap="setWeightUnit">斤</text>
+            <text class="{{weightUnit === 'kg' ? 'active' : ''}}" data-unit="kg" bindtap="setWeightUnit">kg</text>
+          </view>
+        </view>
+        <view class="input-wrap">
+          <input type="digit" value="{{form.weight}}" data-field="weight" bindinput="onFieldInput" placeholder="例如 180" />
+          <text class="unit">{{weightUnit === 'jin' ? '斤' : 'kg'}}</text>
+        </view>
+      </view>
+    </view>
+
+    <view class="field activity-field">
+      <view class="field-label">日常活动量</view>
+      <picker range="{{activityOptions}}" range-key="label" value="{{activityIndex}}" bindchange="onActivityChange">
+        <view class="activity-picker">
+          <view>
+            <view class="activity-name">{{activityOptions[activityIndex].label}}</view>
+            <view class="activity-detail">{{activityOptions[activityIndex].detail}}</view>
+          </view>
+          <text class="chevron">⌄</text>
+        </view>
+      </picker>
+    </view>
+
+    <button class="primary-button" bindtap="calculate">生成我的饮食方案</button>
+    <view class="privacy-tip">数据仅保存在你的设备本地，不会上传</view>
+  </view>
+
+  <view wx:if="{{result}}" id="result" class="result-area">
+    <view class="section-heading result-heading">
+      <view>
+        <view class="eyebrow">STEP 02</view>
+        <view class="section-title">你的分析结果</view>
+      </view>
+      <view class="goal-pill">{{result.goal.label}}</view>
+    </view>
+
+    <view class="metric-grid">
+      <view class="metric-card featured">
+        <view class="metric-label">BMI</view>
+        <view class="metric-value">{{result.bmi}}</view>
+        <view class="metric-status" style="color: {{result.bmiLevel.color}}">{{result.bmiLevel.label}}</view>
+      </view>
+      <view class="metric-card">
+        <view class="metric-label">估算体脂率</view>
+        <view class="metric-value">{{result.bodyFat}}<text>%</text></view>
+        <view class="metric-caption">{{result.bodyFatLabel}}</view>
+      </view>
+      <view class="metric-card">
+        <view class="metric-label">健康体重范围</view>
+        <view class="metric-range">{{result.normalWeightRange}}</view>
+        <view class="metric-caption">按 BMI 18.5～23.9</view>
+      </view>
+    </view>
+
+    <view class="card goal-card">
+      <view class="goal-mark">目标</view>
+      <view class="goal-content">
+        <view class="goal-title">{{result.goal.label}}</view>
+        <view class="goal-summary">{{result.goal.summary}}</view>
+      </view>
+    </view>
+
+    <view class="card calorie-card">
+      <view class="card-title-row">
+        <view>
+          <view class="eyebrow">DAILY TARGET</view>
+          <view class="section-title small">每日营养目标</view>
+        </view>
+        <view class="calorie-total"><text>{{result.targetCalories}}</text> kcal</view>
+      </view>
+
+      <view class="calorie-meta">
+        <view><text>基础代谢</text><text class="strong-text">{{result.bmr}} kcal</text></view>
+        <view><text>维持热量</text><text class="strong-text">{{result.tdee}} kcal</text></view>
+      </view>
+
+      <view class="macro-list">
+        <view class="macro-item protein">
+          <view class="macro-top"><text>蛋白质</text><text class="strong-text">{{result.macros.protein}} g</text></view>
+          <view class="macro-track"><view style="width: 72%"></view></view>
+        </view>
+        <view class="macro-item carbs">
+          <view class="macro-top"><text>碳水化合物</text><text class="strong-text">{{result.macros.carbs}} g</text></view>
+          <view class="macro-track"><view style="width: 86%"></view></view>
+        </view>
+        <view class="macro-item fat">
+          <view class="macro-top"><text>脂肪</text><text class="strong-text">{{result.macros.fat}} g</text></view>
+          <view class="macro-track"><view style="width: 54%"></view></view>
+        </view>
+      </view>
+
+      <view class="quick-targets">
+        <view><text class="quick-icon">💧</text><text>饮水 {{result.water}} L</text></view>
+        <view><text class="quick-icon">🥬</text><text>蔬菜 {{result.vegetable}}</text></view>
+      </view>
+    </view>
+
+    <view class="card meal-card">
+      <view class="eyebrow">MEAL STRUCTURE</view>
+      <view class="section-title small">一日饮食结构</view>
+      <view class="meal-list">
+        <view class="meal-row" wx:for="{{result.meals}}" wx:key="name">
+          <view class="meal-time">
+            <view class="meal-name">{{item.name}}</view>
+            <view class="meal-percent">{{item.percent}}%</view>
+          </view>
+          <view class="meal-body">
+            <view class="meal-nutrients">
+              <text class="strong-text">{{item.calories}} kcal</text>
+              <text>蛋白 {{item.protein}}g · 碳水 {{item.carbs}}g · 脂肪 {{item.fat}}g</text>
+            </view>
+            <view class="meal-suggestion">{{item.suggestion}}</view>
+          </view>
+        </view>
+      </view>
+    </view>
+
+    <view class="card tips-card">
+      <view class="eyebrow">ACTION PLAN</view>
+      <view class="section-title small">执行建议</view>
+      <view class="tip-row" wx:for="{{result.tips}}" wx:key="*this">
+        <view class="tip-index">{{index + 1}}</view>
+        <view class="tip-text">{{item}}</view>
+      </view>
+    </view>
+
+    <view class="method-card">
+      <view class="method-head" bindtap="toggleMethod">
+        <text>计算依据与使用说明</text>
+        <text>{{showMethod ? '收起' : '查看'}}</text>
+      </view>
+      <view wx:if="{{showMethod}}" class="method-body">
+        <text>BMI 用于判断体重区间；体脂率采用成人公式估算，会受肌肉量、年龄等因素影响。每日热量基于 Mifflin-St Jeor 基础代谢公式和活动系数计算。</text>
+        <text>本结果仅用于健康管理参考，不用于疾病诊断。孕期、哺乳期、未成年人、有慢性病或进食障碍史的人群，请咨询医生或注册营养师。</text>
+      </view>
+    </view>
+  </view>
+
+  <view class="safe-bottom"></view>
+</view>
