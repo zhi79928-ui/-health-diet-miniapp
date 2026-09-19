@@ -1,8 +1,14 @@
 // 每 100 g 可食部；USDA SR Legacy 的近似参考值。来源见 docs/nutrition-sources.md。
-// 生熟鸡胸肉是独立条目，不是同一批肉烹调前后的精确换算。
+// 生熟肉是独立条目，不是同一批肉烹调前后的精确换算。
 const FOODS = {
   chickenRaw: { name: '去皮去骨鸡胸肉', state: '生重', note: '烹调前去皮去骨称重；需充分做熟后食用', calories: 120, protein: 22.5, carbs: 0, fat: 2.6, sourceId: '171077' },
   chickenCooked: { name: '烤鸡胸肉（纯肉）', state: '熟重', note: '烤熟后去皮去骨称重；额外用油另计，不通用于水煮、油炸或腌制品', calories: 165, protein: 31, carbs: 0, fat: 3.6, sourceId: '171477' },
+  beefRaw: { name: '牛眼肉（去骨瘦肉）', state: '生重', note: 'USDA Select 级眼肉，去骨、去可分离脂肪；不代表肥牛、牛腩或所有牛肉', calories: 142, protein: 22.5, carbs: 0, fat: 5.8, sourceId: '173382' },
+  beefCooked: { name: '烤牛眼肉（去骨瘦肉）', state: '熟重', note: 'USDA Select 级眼肉瘦肉，烤熟后称重；额外用油另计，不通用于炖牛腩', calories: 191, protein: 29.2, carbs: 0, fat: 8.4, sourceId: '173381' },
+  porkRaw: { name: '猪绞肉', state: '生重', note: '普通新鲜猪绞肉，包含脂肪；不同肥瘦比例差异较大，不代表纯瘦肉或五花肉', calories: 263, protein: 16.9, carbs: 0, fat: 21.2, sourceId: '167902' },
+  porkCooked: { name: '熟猪绞肉', state: '熟重', note: '数据库普通熟猪绞肉条目，未细分烹调方法；肥瘦比例不同请优先用包装标签', calories: 297, protein: 25.7, carbs: 0, fat: 20.8, sourceId: '167903' },
+  codRaw: { name: '大西洋鳕鱼', state: '生重', note: '烹调前可食鱼肉净重，不含骨；不代表银鳕鱼或其他鱼种', calories: 82, protein: 17.8, carbs: 0, fat: 0.7, sourceId: '171955' },
+  codCooked: { name: '干热烹调大西洋鳕鱼', state: '熟重', note: '烘烤等干热烹调后的鱼肉净重；额外用油另计，不通用于油炸或裹粉鱼排', calories: 105, protein: 22.8, carbs: 0, fat: 0.9, sourceId: '171956' },
   rice: { name: '白米饭', state: '熟重', note: '煮熟后称重，不是干大米', calories: 130, protein: 2.7, carbs: 28.2, fat: 0.3, sourceId: '168878' },
   oats: { name: '原味燕麦', state: '干重', note: '加水或牛奶前称重；非煮好的燕麦粥', calories: 389, protein: 16.9, carbs: 66.3, fat: 6.9, sourceId: '169705' },
   broccoli: { name: '西兰花', state: '生重·可食部', note: '去掉不可食部分后、烹调前称重，油另计', calories: 34, protein: 2.8, carbs: 6.6, fat: 0.4, sourceId: '170379' },
@@ -11,6 +17,12 @@ const FOODS = {
   almonds: { name: '原味杏仁', state: '可食部净重', note: '不含壳；非糖衣或油炸制品', calories: 579, protein: 21.1, carbs: 21.5, fat: 49.9, sourceId: '170567' },
   oil: { name: '橄榄油', state: '实际摄入净重', note: '按吃进的油计算，不包含留在锅里的油', calories: 884, protein: 0, carbs: 0, fat: 100, sourceId: '171413' }
 };
+const MEAT_OPTIONS = [
+  { id: 'chicken', label: '鸡胸肉（去皮去骨）', rawId: 'chickenRaw', cookedId: 'chickenCooked', cookedLabel: '烤熟纯肉' },
+  { id: 'beef', label: '牛肉（眼肉·去骨瘦肉）', rawId: 'beefRaw', cookedId: 'beefCooked', cookedLabel: '烤熟瘦肉' },
+  { id: 'pork', label: '猪肉（普通绞肉）', rawId: 'porkRaw', cookedId: 'porkCooked', cookedLabel: '熟绞肉' },
+  { id: 'cod', label: '鱼肉（大西洋鳕鱼）', rawId: 'codRaw', cookedId: 'codCooked', cookedLabel: '干热烹调' }
+];
 const NUTRIENTS = ['calories', 'protein', 'carbs', 'fat'];
 const round1 = n => Math.round((n + Number.EPSILON) * 10) / 10;
 
@@ -36,7 +48,13 @@ function sumNutrition(rows) {
 }
 
 function chickenReference(grams) {
-  return { raw: foodPortion('chickenRaw', grams), cooked: foodPortion('chickenCooked', grams) };
+  return meatReference('chicken', grams);
+}
+
+function meatReference(meatId, grams) {
+  const meat = MEAT_OPTIONS.find(item => item.id === meatId);
+  if (!meat) throw new Error('请选择有效肉类');
+  return { raw: foodPortion(meat.rawId, grams), cooked: foodPortion(meat.cookedId, grams) };
 }
 
 function buildFoodPlan(target, mode = 'raw') {
@@ -82,4 +100,4 @@ function buildFoodPlan(target, mode = 'raw') {
   return { meals, total, differences, needsAdjustment, mode };
 }
 
-module.exports = { FOODS, foodPortion, sumNutrition, chickenReference, buildFoodPlan };
+module.exports = { FOODS, MEAT_OPTIONS, foodPortion, sumNutrition, meatReference, chickenReference, buildFoodPlan };

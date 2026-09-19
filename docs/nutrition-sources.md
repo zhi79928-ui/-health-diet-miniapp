@@ -1,4 +1,4 @@
-# 食物重量与营养参考（v1.1）
+# 食物重量与营养参考（v1.2）
 
 核对日期：2026-09-19。下表均为 **每 100 g 可食部** 的近似值，热量单位 kcal，其余为 g。USDA SR Legacy 为数据原始来源，本次通过 MyFoodData 的 USDA 数据展示页核对；部分页面按杯或其他份量展示，按所列重量归一化到 100 g，并取近似值。不是中国品牌包装的精确检测结果。
 
@@ -6,6 +6,12 @@
 | --- | ---: | ---: | ---: | ---: | --- |
 | 去皮去骨鸡胸肉 / 生重 | 120 | 22.5 | 0 | 2.6 | [171077](https://tools.myfooddata.com/nutrition-facts/171077/100g/1) |
 | 鸡胸肉纯肉 / 烤熟熟重 | 165 | 31 | 0 | 3.6 | [171477](https://tools.myfooddata.com/nutrition-facts/171477/100g) |
+| 牛眼肉去骨瘦肉（Select）/ 生重 | 142 | 22.5 | 0 | 5.8 | [173382](https://tools.myfooddata.com/nutrition-facts/173382/100g/1) |
+| 牛眼肉去骨瘦肉（Select）/ 烤熟熟重 | 191 | 29.2 | 0 | 8.4 | [173381](https://tools.myfooddata.com/nutrition-facts/173381/wt1/) |
+| 普通猪绞肉 / 生重 | 263 | 16.9 | 0 | 21.2 | [167902](https://tools.myfooddata.com/nutrition-facts/167902/wt1/) |
+| 普通猪绞肉 / 熟重 | 297 | 25.7 | 0 | 20.8 | [167903](https://tools.myfooddata.com/nutrition-facts/167903/wt9/) |
+| 大西洋鳕鱼 / 生重 | 82 | 17.8 | 0 | 0.7 | [171955](https://tools.myfooddata.com/nutrition-facts/171955/wt1/) |
+| 大西洋鳕鱼 / 干热烹调熟重 | 105 | 22.8 | 0 | 0.9 | [171956](https://tools.myfooddata.com/nutrition-facts/171956/wt1/2) |
 | 白米饭 / 熟重 | 130 | 2.7 | 28.2 | 0.3 | [168878](https://tools.myfooddata.com/nutrition-facts/168878/wt1) |
 | 燕麦 / 干重 | 389 | 16.9 | 66.3 | 6.9 | [169705](https://tools.myfooddata.com/nutrition-facts/169705/wt1) |
 | 西兰花 / 生重可食部 | 34 | 2.8 | 6.6 | 0.4 | [170379](https://tools.myfooddata.com/nutrition-facts/170379/wt1) |
@@ -16,10 +22,20 @@
 
 鸡肉原始条目：[生重 FDC](https://fdc.nal.usda.gov/food-details/171077/nutrients)、[烤熟 FDC](https://fdc.nal.usda.gov/food-details/171477/nutrients)。其他条目同样可在页面中复制对应的 FDC 链接。
 
+## 肉类速查的适用范围
+
+下拉框四个选项对应八个独立数据条目。输入重量后分别乘以生重、熟重的每 100 g 营养值，展示蛋白质与热量；没有将生重自动换成某个熟重。切换选项时一起更新参考卡片、计算结果、说明和来源。
+
+- 牛肉使用 rib eye steak, boneless, lip off, separable lean only, trimmed to 0 inch fat, select 的生重与 grilled 熟重条目，即去骨并剔除可分离脂肪的眼肉；不代表所有牛肉。
+- 猪肉使用 fresh, ground, raw / cooked，即普通猪绞肉。熟重条目没有细分烹调方法；不能将其命名为水煮瘦肉。肥瘦比例影响很大。
+- 鱼肉限定大西洋鳕鱼 Atlantic cod；熟重为 dry heat 干热烹调，不适用于银鳕鱼、裹粉油炸鱼排等。
+- 数据按近似值展示；熟牛肉等按核对页所列份量归一化。不同来源批次、熟度和脂肪流失都会带来误差，优先采用实际食品的包装标签。
+- 下拉选择只影响速查，不改变上方食谱的鸡肉模板和营养合计。
+
 ## 生熟重量不能混用
 
 - 生重 100 g 的蛋白质参考 22.5 g；烤熟重量 100 g 的蛋白质参考 31 g。是分别称取的 100 g，不能认为同一块生肉做熟后蛋白质从 22.5 g 变成 31 g。
-- 熟肉每 100 g 的蛋白质集中主要与水分减少有关，营养也可能随汁液流失。水煮、煎烤、油炸、裹粉、注水或腌制的成分不同。本应用的熟重只引用烤熟纯肉条目，不输出通用的生熟重量比。
+- 熟肉每 100 g 的蛋白质集中主要与水分减少有关，营养也可能随汁液流失。水煮、煎烤、油炸、裹粉、注水或腌制的成分不同。本应用按所选食物标明具体熟重条目，不输出通用的生熟重量比。
 - 若需同一批次重量关系，应分别称量烹调前后的净重。不要把两个数据库蛋白质数值相除当作实测缩水率。
 - 牛奶这里用质量 g，不将 mL 直接当成 g；品牌食品优先采用包装上的每 100 g / 每 100 mL 数据。
 

@@ -1,5 +1,5 @@
 const assert = require('assert');
-const { FOODS, foodPortion, chickenReference, buildFoodPlan } = require('../utils/foods');
+const { FOODS, MEAT_OPTIONS, foodPortion, meatReference, chickenReference, buildFoodPlan } = require('../utils/foods');
 const { calculateProfile } = require('../utils/health');
 const round1 = n => Math.round((n + Number.EPSILON) * 10) / 10;
 
@@ -16,6 +16,22 @@ for (const bad of ['', ' ', 0, -1, 'abc', NaN, Infinity, 2001]) {
   assert.throws(() => chickenReference(bad), /克数/);
 }
 assert.throws(() => foodPortion('toString', 100), /食物/);
+assert.throws(() => meatReference('unknown', 100), /肉类/);
+assert.throws(() => meatReference('toString', 100), /肉类/);
+// Independently specified examples for the four food/state pairs.
+const expected = [
+  ['chicken', 45, 62, 240, 330],
+  ['beef', 45, 58.4, 284, 382],
+  ['pork', 33.8, 51.4, 526, 594],
+  ['cod', 35.6, 45.6, 164, 210]
+];
+assert.deepStrictEqual(MEAT_OPTIONS.map(item => item.id), expected.map(item => item[0]));
+expected.forEach(([id, rawProtein, cookedProtein, rawCalories, cookedCalories]) => {
+  const value = meatReference(id, 200);
+  assert.deepStrictEqual([value.raw.protein, value.cooked.protein, value.raw.calories, value.cooked.calories], [rawProtein, cookedProtein, rawCalories, cookedCalories]);
+  for (const bad of ['', ' ', 0, -1, 'abc', NaN, Infinity, 2001]) assert.throws(() => meatReference(id, bad), /克数/);
+});
+assert.strictEqual(meatReference('cod', '125.5').cooked.protein, 28.6);
 
 const example = { heightCm: 180, weight: 180, weightUnit: 'jin', age: 30, sex: 'male', activityLevel: 'moderate' };
 for (const mode of ['raw', 'cooked']) {

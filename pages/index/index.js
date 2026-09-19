@@ -1,5 +1,5 @@
 const { calculateProfile } = require('../../utils/health');
-const { FOODS, chickenReference, buildFoodPlan } = require('../../utils/foods');
+const { FOODS, MEAT_OPTIONS, meatReference, buildFoodPlan } = require('../../utils/foods');
 
 const SEX_OPTIONS = [
   { label: '男', value: 'male' },
@@ -22,9 +22,12 @@ Page({
     activityIndex: 2,
     weightUnit: 'jin',
     chickenMode: 'raw',
-    chickenGrams: '100',
-    chickenResult: chickenReference(100),
-    chickenError: '',
+    meatOptions: MEAT_OPTIONS,
+    meatIndex: 0,
+    meatGrams: '100',
+    meatBasis: meatReference('chicken', 100),
+    meatResult: meatReference('chicken', 100),
+    meatError: '',
     foodReferences: Object.keys(FOODS).map(id => ({ id, ...FOODS[id] })),
     showFoods: false,
     form: {
@@ -123,12 +126,23 @@ Page({
     if (saved && saved.form) wx.setStorageSync('healthForm', { ...saved, chickenMode });
   },
 
-  onChickenInput(event) {
-    const chickenGrams = event.detail.value;
+  onMeatChange(event) {
+    const meatIndex = Number(event.detail.value);
+    if (!Number.isInteger(meatIndex) || meatIndex < 0 || meatIndex >= MEAT_OPTIONS.length) return;
+    this.updateMeatLookup(meatIndex, this.data.meatGrams);
+  },
+
+  onMeatInput(event) {
+    this.updateMeatLookup(this.data.meatIndex, event.detail.value);
+  },
+
+  updateMeatLookup(meatIndex, meatGrams) {
+    const meatId = MEAT_OPTIONS[meatIndex].id;
+    const patch = { meatIndex, meatGrams, meatBasis: meatReference(meatId, 100) };
     try {
-      this.setData({ chickenGrams, chickenResult: chickenReference(chickenGrams), chickenError: '' });
+      this.setData({ ...patch, meatResult: meatReference(meatId, meatGrams), meatError: '' });
     } catch (error) {
-      this.setData({ chickenGrams, chickenResult: null, chickenError: error.message });
+      this.setData({ ...patch, meatResult: null, meatError: error.message });
     }
   },
 
@@ -148,9 +162,11 @@ Page({
       activityIndex: 2,
       weightUnit: 'jin',
       chickenMode: 'raw',
-      chickenGrams: '100',
-      chickenResult: chickenReference(100),
-      chickenError: '',
+      meatIndex: 0,
+      meatGrams: '100',
+      meatBasis: meatReference('chicken', 100),
+      meatResult: meatReference('chicken', 100),
+      meatError: '',
       showFoods: false,
       form: { heightCm: '', weight: '', age: '' },
       result: null,

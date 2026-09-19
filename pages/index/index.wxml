@@ -208,25 +208,30 @@
     </view>
   </view>
 
-  <view class="card chicken-card">
-    <view class="eyebrow">RAW &amp; COOKED</view>
-    <view class="section-title small">鸡胸肉蛋白质速查</view>
-    <view class="weight-guide">每 100 g 可食部参考。两行分别称取，不代表同一块肉做熟前后。</view>
+  <view class="card meat-card">
+    <view class="eyebrow">MEAT PROTEIN</view>
+    <view class="section-title small">肉类蛋白质速查</view>
+    <view class="field-label meat-label">选择肉类</view>
+    <picker mode="selector" range="{{meatOptions}}" range-key="label" value="{{meatIndex}}" bindchange="onMeatChange" aria-label="选择肉类及部位">
+      <view class="meat-picker"><text>{{meatOptions[meatIndex].label}}</text><text class="meat-arrow">更换 ▾</text></view>
+    </picker>
+    <view class="weight-guide">每 100 g 可食部参考。生重和熟重分别称取，不代表同一块肉做熟前后。</view>
     <view class="reference-pair">
-      <view><text class="weight-badge">生重 · 去皮去骨</text><view class="reference-value">22.5 <text>g 蛋白质</text></view><view class="food-note">120 kcal / 100 g</view></view>
-      <view><text class="weight-badge">熟重 · 烤熟纯肉</text><view class="reference-value">31 <text>g 蛋白质</text></view><view class="food-note">165 kcal / 100 g</view></view>
+      <view><text class="weight-badge">生重 · 可食部</text><view class="reference-value">{{meatBasis.raw.protein}} <text>g 蛋白质</text></view><view class="food-note">{{meatBasis.raw.calories}} kcal / 100 g</view></view>
+      <view><text class="weight-badge">熟重 · {{meatOptions[meatIndex].cookedLabel}}</text><view class="reference-value">{{meatBasis.cooked.protein}} <text>g 蛋白质</text></view><view class="food-note">{{meatBasis.cooked.calories}} kcal / 100 g</view></view>
     </view>
-    <view class="weight-guide">熟肉每 100 g 的蛋白质通常更集中，主要因为烹调失水，并不是凭空增加蛋白质。烹调也可能造成营养流失；水煮、煎烤、油炸和腌制品不能套用同一个熟重数值。</view>
-    <view class="field-label">输入鸡胸肉重量，分别查看生重 / 熟重结果</view>
-    <view class="input-wrap"><input type="digit" value="{{chickenGrams}}" bindinput="onChickenInput" placeholder="例如 150" aria-label="鸡胸肉重量（克）" /><text class="unit">g</text></view>
-    <view wx:if="{{chickenError}}" class="plan-warning">{{chickenError}}</view>
-    <view wx:if="{{chickenResult}}" class="calculator-results">
-      <view>若为 {{chickenGrams}} g 生重：约 <text class="food-grams">{{chickenResult.raw.protein}} g 蛋白质</text>，{{chickenResult.raw.calories}} kcal</view>
-      <view>若为 {{chickenGrams}} g 熟重（烤熟）：约 <text class="food-grams">{{chickenResult.cooked.protein}} g 蛋白质</text>，{{chickenResult.cooked.calories}} kcal</view>
+    <view class="weight-guide"><view>生重：{{meatBasis.raw.note}}</view><view>熟重：{{meatBasis.cooked.note}}</view></view>
+    <view class="field-label">输入所选肉类重量，分别查看生重 / 熟重结果</view>
+    <view class="input-wrap"><input type="digit" value="{{meatGrams}}" bindinput="onMeatInput" placeholder="例如 150" aria-label="所选肉类重量（克）" /><text class="unit">g</text></view>
+    <view wx:if="{{meatError}}" class="plan-warning">{{meatError}}</view>
+    <view wx:if="{{meatResult}}" class="calculator-results">
+      <view>若为 {{meatResult.raw.grams}} g 生重：约 <text class="food-grams">{{meatResult.raw.protein}} g 蛋白质</text>，{{meatResult.raw.calories}} kcal</view>
+      <view>若为 {{meatResult.cooked.grams}} g 熟重（{{meatOptions[meatIndex].cookedLabel}}）：约 <text class="food-grams">{{meatResult.cooked.protein}} g 蛋白质</text>，{{meatResult.cooked.calories}} kcal</view>
     </view>
+    <view class="weight-guide">熟肉每 100 g 的蛋白质通常更集中，主要因为烹调失水，并不是凭空增加蛋白质。部位、肥瘦和做法会影响数值；有包装时优先采用营养标签。</view>
     <view class="weight-guide">计算方式：食物克数 ÷ 100 × 对应状态的每 100 g 营养值。若要知道同一批肉的生熟重量关系，请分别称量烹调前后总重；本工具不使用固定缩水比例。</view>
-    <view class="source-actions"><button size="mini" data-id="chickenRaw" bindtap="copyFoodSource">复制生重来源</button><button size="mini" data-id="chickenCooked" bindtap="copyFoodSource">复制熟重来源</button></view>
-    <view class="food-note">USDA SR Legacy：171077 / 171477。数值为近似参考，生重鸡肉需做熟后食用。</view>
+    <view class="source-actions"><button size="mini" data-id="{{meatBasis.raw.id}}" bindtap="copyFoodSource">复制生重来源</button><button size="mini" data-id="{{meatBasis.cooked.id}}" bindtap="copyFoodSource">复制熟重来源</button></view>
+    <view class="food-note">USDA SR Legacy：{{meatBasis.raw.sourceId}} / {{meatBasis.cooked.sourceId}}。数值为近似参考；生重指烹调前称量，肉类请做熟后食用。</view>
   </view>
 
   <view class="method-card">

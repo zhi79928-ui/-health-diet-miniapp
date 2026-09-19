@@ -538,6 +538,10 @@
 .table-unit { display: block; color: #819088; font-size: 19rpx; }
 .plan-warning { padding: 18rpx; margin-top: 16rpx; background: #fff3df; color: #895a18; border-radius: 12rpx; font-size: 23rpx; line-height: 1.65; }
 .reference-pair { display: flex; gap: 18rpx; }
+.meat-label { margin-top: 24rpx; }
+.meat-picker { display: flex; align-items: center; justify-content: space-between; gap: 16rpx; padding: 24rpx; border: 2rpx solid #cfe4d7; border-radius: 18rpx; background: #f3f8f5; color: #183d2d; font-size: 26rpx; line-height: 1.6; }
+.meat-picker > text:first-child { flex: 1; min-width: 0; }
+.meat-arrow { flex-shrink: 0; font-size: 23rpx; color: #246446; }
 .reference-pair > view { flex: 1; min-width: 0; padding: 18rpx; border-radius: 18rpx; background: #f3f8f5; }
 .reference-value { margin: 12rpx 0; font-size: 42rpx; font-weight: 750; color: #183d2d; }
 .reference-value text { display: block; font-size: 22rpx; font-weight: 500; }
