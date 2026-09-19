@@ -1,4 +1,5 @@
 const { calculateProfile } = require('../../utils/health');
+const { FOODS, chickenReference, buildFoodPlan } = require('../../utils/foods');
 
 const SEX_OPTIONS = [
   { label: '男', value: 'male' },
@@ -20,6 +21,12 @@ Page({
     sexIndex: 0,
     activityIndex: 2,
     weightUnit: 'jin',
+    chickenMode: 'raw',
+    chickenGrams: '100',
+    chickenResult: chickenReference(100),
+    chickenError: '',
+    foodReferences: Object.keys(FOODS).map(id => ({ id, ...FOODS[id] })),
+    showFoods: false,
     form: {
       heightCm: '180',
       weight: '180',
@@ -35,6 +42,7 @@ Page({
       this.setData({
         form: saved.form,
         weightUnit: saved.weightUnit || 'jin',
+        chickenMode: saved.chickenMode === 'cooked' ? 'cooked' : 'raw',
         sexIndex: Number.isInteger(saved.sexIndex) ? saved.sexIndex : 0,
         activityIndex: Number.isInteger(saved.activityIndex) ? saved.activityIndex : 2
       });
@@ -43,7 +51,7 @@ Page({
 
   onFieldInput(event) {
     const field = event.currentTarget.dataset.field;
-    this.setData({ [`form.${field}`]: event.detail.value });
+    this.setData({ [`form.${field}`]: event.detail.value, result: null });
   },
 
   onSexChange(event) {
@@ -75,18 +83,19 @@ Page({
   },
 
   calculate() {
-    const { form, weightUnit, sexIndex, activityIndex } = this.data;
+    const { form, weightUnit, sexIndex, activityIndex, chickenMode } = this.data;
 
     try {
       const result = calculateProfile({
         ...form,
         weightUnit,
+        chickenMode,
         sex: SEX_OPTIONS[sexIndex].value,
         activityLevel: ACTIVITY_OPTIONS[activityIndex].value
       });
 
       this.setData({ result, showMethod: false });
-      wx.setStorageSync('healthForm', { form, weightUnit, sexIndex, activityIndex });
+      wx.setStorageSync('healthForm', { form, weightUnit, sexIndex, activityIndex, chickenMode });
 
       wx.nextTick(() => {
         wx.pageScrollTo({ selector: '#result', duration: 350 });
@@ -100,12 +109,49 @@ Page({
     this.setData({ showMethod: !this.data.showMethod });
   },
 
+  setChickenMode(event) {
+    const chickenMode = event.currentTarget.dataset.mode;
+    if (!['raw', 'cooked'].includes(chickenMode)) return;
+    const patch = { chickenMode };
+    if (this.data.result) {
+      const result = this.data.result;
+      const foodPlan = buildFoodPlan({ calories: result.targetCalories, ...result.macros }, chickenMode);
+      patch.result = { ...result, meals: foodPlan.meals, foodPlan };
+    }
+    this.setData(patch);
+    const saved = wx.getStorageSync('healthForm');
+    if (saved && saved.form) wx.setStorageSync('healthForm', { ...saved, chickenMode });
+  },
+
+  onChickenInput(event) {
+    const chickenGrams = event.detail.value;
+    try {
+      this.setData({ chickenGrams, chickenResult: chickenReference(chickenGrams), chickenError: '' });
+    } catch (error) {
+      this.setData({ chickenGrams, chickenResult: null, chickenError: error.message });
+    }
+  },
+
+  toggleFoods() {
+    this.setData({ showFoods: !this.data.showFoods });
+  },
+
+  copyFoodSource(event) {
+    const food = FOODS[event.currentTarget.dataset.id];
+    if (food) wx.setClipboardData({ data: `https://fdc.nal.usda.gov/food-details/${food.sourceId}/nutrients` });
+  },
+
   reset() {
     wx.removeStorageSync('healthForm');
     this.setData({
       sexIndex: 0,
       activityIndex: 2,
       weightUnit: 'jin',
+      chickenMode: 'raw',
+      chickenGrams: '100',
+      chickenResult: chickenReference(100),
+      chickenError: '',
+      showFoods: false,
       form: { heightCm: '', weight: '', age: '' },
       result: null,
       showMethod: false

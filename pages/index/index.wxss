@@ -436,6 +436,8 @@
 }
 
 .meal-body {
+  flex: 1;
+  min-width: 0;
   padding-left: 22rpx;
   border-left: 2rpx solid #dce8e0;
 }
@@ -516,3 +518,32 @@
   font-size: 21rpx;
   line-height: 1.7;
 }
+
+.weight-guide { margin: 20rpx 0; color: #66796d; font-size: 23rpx; line-height: 1.75; }
+.weight-tabs { display: flex; gap: 12rpx; }
+.weight-tabs button { flex: 1; margin: 0; padding: 12rpx 8rpx; font-size: 23rpx; line-height: 1.6; color: #486752; background: #edf3ef; border-radius: 14rpx; }
+.weight-tabs .selected { color: #fff; background: #1c6848; }
+.food-row { padding: 20rpx 0; border-top: 1rpx solid #e8efeb; }
+.food-row:first-child { margin-top: 14rpx; }
+.food-title { font-size: 25rpx; line-height: 1.65; font-weight: 600; }
+.food-grams { color: #176843; font-weight: 750; }
+.weight-badge { display: inline-block; margin: 6rpx 0; padding: 3rpx 12rpx; border-radius: 8rpx; color: #1b6344; background: #e5f4eb; font-size: 21rpx; }
+.food-note { font-size: 21rpx; line-height: 1.7; color: #718078; }
+.food-nutrients { margin-top: 6rpx; color: #53685b; font-size: 22rpx; line-height: 1.65; }
+.plan-total { padding: 24rpx 0 0; border-top: 2rpx solid #cfe4d7; }
+.compare-row { display: flex; align-items: center; padding: 18rpx 0; border-bottom: 1rpx solid #edf1ee; font-size: 23rpx; }
+.compare-row > text { flex: 1; text-align: right; min-width: 0; }
+.compare-row > text:first-child { text-align: left; }
+.table-head { color: #738179; font-size: 21rpx; }
+.table-unit { display: block; color: #819088; font-size: 19rpx; }
+.plan-warning { padding: 18rpx; margin-top: 16rpx; background: #fff3df; color: #895a18; border-radius: 12rpx; font-size: 23rpx; line-height: 1.65; }
+.reference-pair { display: flex; gap: 18rpx; }
+.reference-pair > view { flex: 1; min-width: 0; padding: 18rpx; border-radius: 18rpx; background: #f3f8f5; }
+.reference-value { margin: 12rpx 0; font-size: 42rpx; font-weight: 750; color: #183d2d; }
+.reference-value text { display: block; font-size: 22rpx; font-weight: 500; }
+.calculator-results { margin: 20rpx 0; font-size: 25rpx; line-height: 1.9; }
+.source-actions { display: flex; flex-wrap: wrap; gap: 12rpx; margin-bottom: 16rpx; }
+.source-actions button, .source-link { margin: 0; background: #e7f1eb; color: #246446; font-size: 22rpx; }
+.source-link { margin-top: 10rpx; }
+.quick-targets { flex-wrap: wrap; }
+.quick-targets view { min-width: 220rpx; }

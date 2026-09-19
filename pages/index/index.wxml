@@ -147,21 +147,43 @@
 
     <view class="card meal-card">
       <view class="eyebrow">MEAL STRUCTURE</view>
-      <view class="section-title small">一日饮食结构</view>
+      <view class="section-title small">一日参考食谱 · 按克称量</view>
+      <view class="weight-guide">每项都标注称重状态。生重＝烹调前；熟重＝烹调后；可食部＝去掉骨、壳、核等不吃的部分。营养数值为估算，请优先参考包装标签。</view>
+      <view class="field-label">食谱中的鸡胸肉怎样称？</view>
+      <view class="weight-tabs">
+        <button class="{{chickenMode === 'raw' ? 'selected' : ''}}" data-mode="raw" bindtap="setChickenMode">生重备餐</button>
+        <button class="{{chickenMode === 'cooked' ? 'selected' : ''}}" data-mode="cooked" bindtap="setChickenMode">熟重称量（烤熟）</button>
+      </view>
+      <view class="weight-guide">切换会按不同营养条目重新配餐，不能将前后的克数视为同一份肉的精确生熟换算。米饭仍按熟重、蔬菜仍按生重计算。</view>
       <view class="meal-list">
         <view class="meal-row" wx:for="{{result.meals}}" wx:key="name">
           <view class="meal-time">
             <view class="meal-name">{{item.name}}</view>
-            <view class="meal-percent">{{item.percent}}%</view>
+            <view class="meal-percent">食物合计</view>
           </view>
           <view class="meal-body">
             <view class="meal-nutrients">
-              <text class="strong-text">{{item.calories}} kcal</text>
+              <text class="strong-text">约 {{item.calories}} kcal</text>
               <text>蛋白 {{item.protein}}g · 碳水 {{item.carbs}}g · 脂肪 {{item.fat}}g</text>
             </view>
-            <view class="meal-suggestion">{{item.suggestion}}</view>
+            <view class="food-row" wx:for="{{item.foods}}" wx:for-item="food" wx:key="id">
+              <view class="food-title">{{food.name}} <text class="food-grams">{{food.grams}} g</text></view>
+              <view class="weight-badge">{{food.state}}</view>
+              <view class="food-note">{{food.note}}</view>
+              <view class="food-nutrients">约 {{food.calories}} kcal · 蛋白 {{food.protein}} g</view>
+              <view class="food-nutrients">碳水 {{food.carbs}} g · 脂肪 {{food.fat}} g</view>
+            </view>
           </view>
         </view>
+      </view>
+      <view class="plan-total">
+        <view class="section-title small">全天食谱与目标对照</view>
+        <view class="compare-row table-head"><text>营养</text><text>目标</text><text>食谱估算</text><text>差额</text></view>
+        <view class="compare-row" wx:for="{{result.foodPlan.differences}}" wx:key="key">
+          <text>{{item.label}}<text class="table-unit">{{item.unit}}</text></text><text>{{item.target}}</text><text>{{item.actual}}</text><text>{{item.delta}}</text>
+        </view>
+        <view wx:if="{{result.foodPlan.needsAdjustment}}" class="plan-warning">部分营养与目标相差超过 10%，此食谱尚未达标，需要调整食物组合或份量。</view>
+        <view class="weight-guide">这是可称量的单日配餐示例，未考虑个人过敏、乳糖不耐受及口味偏好。不能随意等克替换食物；加酱料、裹粉或额外用油需另计。</view>
       </view>
     </view>
 
@@ -182,6 +204,39 @@
       <view wx:if="{{showMethod}}" class="method-body">
         <text>BMI 用于判断体重区间；体脂率采用成人公式估算，会受肌肉量、年龄等因素影响。每日热量基于 Mifflin-St Jeor 基础代谢公式和活动系数计算。</text>
         <text>本结果仅用于健康管理参考，不用于疾病诊断。孕期、哺乳期、未成年人、有慢性病或进食障碍史的人群，请咨询医生或注册营养师。</text>
+      </view>
+    </view>
+  </view>
+
+  <view class="card chicken-card">
+    <view class="eyebrow">RAW &amp; COOKED</view>
+    <view class="section-title small">鸡胸肉蛋白质速查</view>
+    <view class="weight-guide">每 100 g 可食部参考。两行分别称取，不代表同一块肉做熟前后。</view>
+    <view class="reference-pair">
+      <view><text class="weight-badge">生重 · 去皮去骨</text><view class="reference-value">22.5 <text>g 蛋白质</text></view><view class="food-note">120 kcal / 100 g</view></view>
+      <view><text class="weight-badge">熟重 · 烤熟纯肉</text><view class="reference-value">31 <text>g 蛋白质</text></view><view class="food-note">165 kcal / 100 g</view></view>
+    </view>
+    <view class="weight-guide">熟肉每 100 g 的蛋白质通常更集中，主要因为烹调失水，并不是凭空增加蛋白质。烹调也可能造成营养流失；水煮、煎烤、油炸和腌制品不能套用同一个熟重数值。</view>
+    <view class="field-label">输入鸡胸肉重量，分别查看生重 / 熟重结果</view>
+    <view class="input-wrap"><input type="digit" value="{{chickenGrams}}" bindinput="onChickenInput" placeholder="例如 150" aria-label="鸡胸肉重量（克）" /><text class="unit">g</text></view>
+    <view wx:if="{{chickenError}}" class="plan-warning">{{chickenError}}</view>
+    <view wx:if="{{chickenResult}}" class="calculator-results">
+      <view>若为 {{chickenGrams}} g 生重：约 <text class="food-grams">{{chickenResult.raw.protein}} g 蛋白质</text>，{{chickenResult.raw.calories}} kcal</view>
+      <view>若为 {{chickenGrams}} g 熟重（烤熟）：约 <text class="food-grams">{{chickenResult.cooked.protein}} g 蛋白质</text>，{{chickenResult.cooked.calories}} kcal</view>
+    </view>
+    <view class="weight-guide">计算方式：食物克数 ÷ 100 × 对应状态的每 100 g 营养值。若要知道同一批肉的生熟重量关系，请分别称量烹调前后总重；本工具不使用固定缩水比例。</view>
+    <view class="source-actions"><button size="mini" data-id="chickenRaw" bindtap="copyFoodSource">复制生重来源</button><button size="mini" data-id="chickenCooked" bindtap="copyFoodSource">复制熟重来源</button></view>
+    <view class="food-note">USDA SR Legacy：171077 / 171477。数值为近似参考，生重鸡肉需做熟后食用。</view>
+  </view>
+
+  <view class="method-card">
+    <view class="method-head" bindtap="toggleFoods"><text>食物营养参考表 · 每 100 g</text><text>{{showFoods ? '收起' : '展开'}}</text></view>
+    <view wx:if="{{showFoods}}" class="food-reference-list">
+      <view wx:for="{{foodReferences}}" wx:key="id" class="food-row">
+        <view class="food-title">{{item.name}} <text class="weight-badge">{{item.state}}</text></view>
+        <view class="food-nutrients">{{item.calories}} kcal · 蛋白 {{item.protein}} g · 碳水 {{item.carbs}} g · 脂肪 {{item.fat}} g</view>
+        <view class="food-note">{{item.note}}</view>
+        <button size="mini" class="source-link" data-id="{{item.id}}" bindtap="copyFoodSource">复制数据来源</button>
       </view>
     </view>
   </view>

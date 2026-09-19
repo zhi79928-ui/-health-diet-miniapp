@@ -1,3 +1,4 @@
+const { buildFoodPlan } = require('./foods');
 const ACTIVITY_FACTORS = {
   sedentary: 1.2,
   light: 1.375,
@@ -81,40 +82,6 @@ function validateInput(input) {
   return { heightCm, weightKg, age };
 }
 
-function buildMeals(calories, protein, carbs, fat) {
-  const meals = [
-    {
-      name: '早餐',
-      ratio: 0.25,
-      suggestion: '燕麦/全麦主食 + 鸡蛋 + 牛奶或无糖豆浆 + 1份水果'
-    },
-    {
-      name: '午餐',
-      ratio: 0.35,
-      suggestion: '1拳主食 + 1～2掌瘦肉/鱼虾 + 2拳蔬菜'
-    },
-    {
-      name: '加餐',
-      ratio: 0.1,
-      suggestion: '无糖酸奶/牛奶 + 水果，或少量坚果'
-    },
-    {
-      name: '晚餐',
-      ratio: 0.3,
-      suggestion: '适量主食 + 1掌优质蛋白 + 2拳蔬菜，少油烹调'
-    }
-  ];
-
-  return meals.map((meal) => ({
-    ...meal,
-    calories: roundToTen(calories * meal.ratio),
-    protein: Math.round(protein * meal.ratio),
-    carbs: Math.round(carbs * meal.ratio),
-    fat: Math.round(fat * meal.ratio),
-    percent: Math.round(meal.ratio * 100)
-  }));
-}
-
 function calculateProfile(input) {
   const { heightCm, weightKg, age } = validateInput(input);
   const heightM = heightCm / 100;
@@ -141,6 +108,7 @@ function calculateProfile(input) {
 
   const normalMinKg = 18.5 * heightM * heightM;
   const normalMaxKg = 23.9 * heightM * heightM;
+  const foodPlan = buildFoodPlan({ calories: targetCalories, protein, carbs, fat }, input.chickenMode || 'raw');
 
   return {
     input: {
@@ -165,8 +133,9 @@ function calculateProfile(input) {
       fat
     },
     water: round(weightKg * 35 / 1000, 1),
-    vegetable: '至少 500 g',
-    meals: buildMeals(targetCalories, protein, carbs, fat),
+    vegetable: '500 g 生重·可食部',
+    meals: foodPlan.meals,
+    foodPlan,
     tips: [
       goal.key === 'lose'
         ? '每周体重下降约 0.3～0.7 kg 更容易长期坚持。'

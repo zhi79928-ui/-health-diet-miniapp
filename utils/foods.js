@@ -1,0 +1,85 @@
+// 每 100 g 可食部；USDA SR Legacy 的近似参考值。来源见 docs/nutrition-sources.md。
+// 生熟鸡胸肉是独立条目，不是同一批肉烹调前后的精确换算。
+const FOODS = {
+  chickenRaw: { name: '去皮去骨鸡胸肉', state: '生重', note: '烹调前去皮去骨称重；需充分做熟后食用', calories: 120, protein: 22.5, carbs: 0, fat: 2.6, sourceId: '171077' },
+  chickenCooked: { name: '烤鸡胸肉（纯肉）', state: '熟重', note: '烤熟后去皮去骨称重；额外用油另计，不通用于水煮、油炸或腌制品', calories: 165, protein: 31, carbs: 0, fat: 3.6, sourceId: '171477' },
+  rice: { name: '白米饭', state: '熟重', note: '煮熟后称重，不是干大米', calories: 130, protein: 2.7, carbs: 28.2, fat: 0.3, sourceId: '168878' },
+  oats: { name: '原味燕麦', state: '干重', note: '加水或牛奶前称重；非煮好的燕麦粥', calories: 389, protein: 16.9, carbs: 66.3, fat: 6.9, sourceId: '169705' },
+  broccoli: { name: '西兰花', state: '生重·可食部', note: '去掉不可食部分后、烹调前称重，油另计', calories: 34, protein: 2.8, carbs: 6.6, fat: 0.4, sourceId: '170379' },
+  milk: { name: '全脂纯牛奶', state: '即饮净重', note: '这里以克计，不把毫升当克；有包装时以营养标签为准', calories: 61, protein: 3.2, carbs: 4.8, fat: 3.3, sourceId: '171265' },
+  apple: { name: '苹果', state: '生重·可食部', note: '带皮去核后称重', calories: 52, protein: 0.3, carbs: 13.8, fat: 0.2, sourceId: '171688' },
+  almonds: { name: '原味杏仁', state: '可食部净重', note: '不含壳；非糖衣或油炸制品', calories: 579, protein: 21.1, carbs: 21.5, fat: 49.9, sourceId: '170567' },
+  oil: { name: '橄榄油', state: '实际摄入净重', note: '按吃进的油计算，不包含留在锅里的油', calories: 884, protein: 0, carbs: 0, fat: 100, sourceId: '171413' }
+};
+const NUTRIENTS = ['calories', 'protein', 'carbs', 'fat'];
+const round1 = n => Math.round((n + Number.EPSILON) * 10) / 10;
+
+function foodPortion(id, grams) {
+  if (!Object.prototype.hasOwnProperty.call(FOODS, id)) throw new Error('请选择有效食物');
+  const weight = Number(grams);
+  if (!Number.isFinite(weight) || weight <= 0 || weight > 2000) {
+    throw new Error('请输入大于 0 且不超过 2000 的克数');
+  }
+  const food = FOODS[id];
+  const result = { ...food, id, grams: weight };
+  NUTRIENTS.forEach(key => { result[key] = round1(food[key] * weight / 100); });
+  return result;
+}
+
+// 汇总已显示的分项，避免用户把页面上的数字相加却对不上总数。
+function sumNutrition(rows) {
+  const total = {};
+  NUTRIENTS.forEach(key => {
+    total[key] = round1(rows.reduce((sum, row) => sum + row[key], 0));
+  });
+  return total;
+}
+
+function chickenReference(grams) {
+  return { raw: foodPortion('chickenRaw', grams), cooked: foodPortion('chickenCooked', grams) };
+}
+
+function buildFoodPlan(target, mode = 'raw') {
+  if (mode !== 'raw' && mode !== 'cooked') throw new Error('请选择鸡胸肉称重方式');
+  NUTRIENTS.forEach(key => {
+    if (!Number.isFinite(target[key]) || target[key] <= 0) throw new Error('营养目标无效');
+  });
+  const clamp = (value, min, max) => Math.max(min, Math.min(max, value));
+  const step5 = value => Math.round(value / 5) * 5;
+  const chickenId = mode === 'raw' ? 'chickenRaw' : 'chickenCooked';
+  const breakfast = [foodPortion('oats', step5(clamp(60 * target.calories / 2000, 35, 100))), foodPortion('milk', 250)];
+  const snack = [foodPortion('milk', 200), foodPortion('apple', 200), foodPortion('almonds', 15)];
+  const vegetables = [foodPortion('broccoli', 250), foodPortion('broccoli', 250)];
+  const fixed = sumNutrition(breakfast.concat(snack, vegetables));
+
+  // 从全天碳水、蛋白目标扣除其他食物的贡献，再安排米饭和鸡胸肉。
+  // 分量设上限；目标超出模板能力时显示差额，不假装已经达标。
+  const riceGrams = step5(clamp((target.carbs - fixed.carbs) / FOODS.rice.carbs * 100, 100, 1200));
+  const riceTotal = foodPortion('rice', riceGrams);
+  const chickenGrams = step5(clamp((target.protein - fixed.protein - riceTotal.protein) / FOODS[chickenId].protein * 100, 60, mode === 'raw' ? 700 : 510));
+  const chickenTotal = foodPortion(chickenId, chickenGrams);
+  const oilGrams = Math.round(clamp(target.fat - fixed.fat - riceTotal.fat - chickenTotal.fat, 0, 40));
+  const lunchRice = step5(riceGrams * 0.55);
+  const lunchChicken = step5(chickenGrams * 0.55);
+  const lunchOil = Math.round(oilGrams * 0.55);
+  const lunch = [foodPortion('rice', lunchRice), foodPortion(chickenId, lunchChicken), vegetables[0]];
+  const dinner = [foodPortion('rice', riceGrams - lunchRice), foodPortion(chickenId, chickenGrams - lunchChicken), vegetables[1]];
+  if (lunchOil > 0) lunch.push(foodPortion('oil', lunchOil));
+  if (oilGrams - lunchOil > 0) dinner.push(foodPortion('oil', oilGrams - lunchOil));
+
+  const meals = [
+    { name: '早餐', foods: breakfast },
+    { name: '午餐', foods: lunch },
+    { name: '加餐', foods: snack },
+    { name: '晚餐', foods: dinner }
+  ].map(meal => ({ ...meal, ...sumNutrition(meal.foods) }));
+  const total = sumNutrition(meals);
+  const differences = NUTRIENTS.map((key, i) => {
+    const delta = round1(total[key] - target[key]);
+    return { key, label: ['热量', '蛋白质', '碳水', '脂肪'][i], unit: key === 'calories' ? 'kcal' : 'g', target: target[key], actual: total[key], delta: delta > 0 ? `+${delta}` : String(delta) };
+  });
+  const needsAdjustment = NUTRIENTS.some(key => Math.abs(total[key] - target[key]) / target[key] > 0.1);
+  return { meals, total, differences, needsAdjustment, mode };
+}
+
+module.exports = { FOODS, foodPortion, sumNutrition, chickenReference, buildFoodPlan };
