@@ -25,7 +25,12 @@ const expected = [
   ['pork', 33.8, 51.4, 526, 594],
   ['cod', 35.6, 45.6, 164, 210]
 ];
-assert.deepStrictEqual(MEAT_OPTIONS.map(item => item.id), expected.map(item => item[0]));
+assert.deepStrictEqual(MEAT_OPTIONS.slice(0, 4).map(item => item.id), expected.map(item => item[0]));
+assert.strictEqual(MEAT_OPTIONS.length, 16);
+assert.strictEqual(meatReference('shrimp', 200).cooked.protein, 48);
+assert.strictEqual(meatReference('thigh', 200).cooked.protein, 49.4);
+assert.strictEqual(meatReference('turkey', 100).raw, null);
+assert.strictEqual(meatReference('turkey', 100).cooked.sourceId, '171496');
 expected.forEach(([id, rawProtein, cookedProtein, rawCalories, cookedCalories]) => {
   const value = meatReference(id, 200);
   assert.deepStrictEqual([value.raw.protein, value.cooked.protein, value.raw.calories, value.cooked.calories], [rawProtein, cookedProtein, rawCalories, cookedCalories]);

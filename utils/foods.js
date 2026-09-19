@@ -1,6 +1,8 @@
 // 每 100 g 可食部；USDA SR Legacy 的近似参考值。来源见 docs/nutrition-sources.md。
 // 生熟肉是独立条目，不是同一批肉烹调前后的精确换算。
+const { EXTRA_FOODS, EXTRA_OPTIONS } = require('./extra-meats');
 const FOODS = {
+  ...EXTRA_FOODS,
   chickenRaw: { name: '去皮去骨鸡胸肉', state: '生重', note: '烹调前去皮去骨称重；需充分做熟后食用', calories: 120, protein: 22.5, carbs: 0, fat: 2.6, sourceId: '171077' },
   chickenCooked: { name: '烤鸡胸肉（纯肉）', state: '熟重', note: '烤熟后去皮去骨称重；额外用油另计，不通用于水煮、油炸或腌制品', calories: 165, protein: 31, carbs: 0, fat: 3.6, sourceId: '171477' },
   beefRaw: { name: '牛眼肉（去骨瘦肉）', state: '生重', note: 'USDA Select 级眼肉，去骨、去可分离脂肪；不代表肥牛、牛腩或所有牛肉', calories: 142, protein: 22.5, carbs: 0, fat: 5.8, sourceId: '173382' },
@@ -22,7 +24,7 @@ const MEAT_OPTIONS = [
   { id: 'beef', label: '牛肉（眼肉·去骨瘦肉）', rawId: 'beefRaw', cookedId: 'beefCooked', cookedLabel: '烤熟瘦肉' },
   { id: 'pork', label: '猪肉（普通绞肉）', rawId: 'porkRaw', cookedId: 'porkCooked', cookedLabel: '熟绞肉' },
   { id: 'cod', label: '鱼肉（大西洋鳕鱼）', rawId: 'codRaw', cookedId: 'codCooked', cookedLabel: '干热烹调' }
-];
+].concat(EXTRA_OPTIONS);
 const NUTRIENTS = ['calories', 'protein', 'carbs', 'fat'];
 const round1 = n => Math.round((n + Number.EPSILON) * 10) / 10;
 
@@ -54,7 +56,8 @@ function chickenReference(grams) {
 function meatReference(meatId, grams) {
   const meat = MEAT_OPTIONS.find(item => item.id === meatId);
   if (!meat) throw new Error('请选择有效肉类');
-  return { raw: foodPortion(meat.rawId, grams), cooked: foodPortion(meat.cookedId, grams) };
+  return { raw: meat.rawId ? foodPortion(meat.rawId, grams) : null,
+    cooked: meat.cookedId ? foodPortion(meat.cookedId, grams) : null };
 }
 
 function buildFoodPlan(target, mode = 'raw') {

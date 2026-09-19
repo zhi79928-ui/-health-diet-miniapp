@@ -1,5 +1,12 @@
 const { calculateProfile } = require('../../utils/health');
-const { FOODS, MEAT_OPTIONS, meatReference, buildFoodPlan } = require('../../utils/foods');
+const { buildFoodPlan } = require('../../utils/foods');
+const { dateKey, readDays, createDay, saveDay } = require('../../utils/tracker');
+const GOAL_OPTIONS = [
+  { label: '按基础信息推荐', value: 'auto' },
+  { label: '减脂减重', value: 'lose' },
+  { label: '维持体重 / 改善线条', value: 'maintain' },
+  { label: '增重 / 配合增肌训练', value: 'gain' }
+];
 
 const SEX_OPTIONS = [
   { label: '男', value: 'male' },
@@ -20,20 +27,14 @@ Page({
     activityOptions: ACTIVITY_OPTIONS,
     sexIndex: 0,
     activityIndex: 2,
+    goalOptions: GOAL_OPTIONS,
+    goalIndex: 0,
     weightUnit: 'jin',
     chickenMode: 'raw',
-    meatOptions: MEAT_OPTIONS,
-    meatIndex: 0,
-    meatGrams: '100',
-    meatBasis: meatReference('chicken', 100),
-    meatResult: meatReference('chicken', 100),
-    meatError: '',
-    foodReferences: Object.keys(FOODS).map(id => ({ id, ...FOODS[id] })),
-    showFoods: false,
     form: {
-      heightCm: '180',
-      weight: '180',
-      age: '30'
+      heightCm: '',
+      weight: '',
+      age: ''
     },
     result: null,
     showMethod: false
@@ -46,8 +47,9 @@ Page({
         form: saved.form,
         weightUnit: saved.weightUnit || 'jin',
         chickenMode: saved.chickenMode === 'cooked' ? 'cooked' : 'raw',
-        sexIndex: Number.isInteger(saved.sexIndex) ? saved.sexIndex : 0,
-        activityIndex: Number.isInteger(saved.activityIndex) ? saved.activityIndex : 2
+        sexIndex: [0, 1].includes(saved.sexIndex) ? saved.sexIndex : 0,
+        goalIndex: [0, 1, 2, 3].includes(saved.goalIndex) ? saved.goalIndex : 0,
+        activityIndex: Number.isInteger(saved.activityIndex) && ACTIVITY_OPTIONS[saved.activityIndex] ? saved.activityIndex : 2
       });
     }
   },
@@ -63,6 +65,20 @@ Page({
 
   onActivityChange(event) {
     this.setData({ activityIndex: Number(event.detail.value), result: null });
+  },
+
+  onGoalChange(event) {
+    const goalIndex = Number(event.detail.value);
+    if (Number.isInteger(goalIndex) && GOAL_OPTIONS[goalIndex]) this.setData({ goalIndex, result: null });
+  },
+
+  saveTodayPlan() {
+    try {
+      if (!this.data.result) throw new Error('请先生成饮食方案');
+      const date = dateKey();
+      saveDay(createDay(this.data.result, date, readDays()[date]));
+      wx.switchTab({ url: '/pages/today/index' });
+    } catch (error) { wx.showToast({ title: error.message || '保存失败，请重试', icon: 'none' }); }
   },
 
   setWeightUnit(event) {
@@ -86,19 +102,20 @@ Page({
   },
 
   calculate() {
-    const { form, weightUnit, sexIndex, activityIndex, chickenMode } = this.data;
+    const { form, weightUnit, sexIndex, activityIndex, chickenMode, goalIndex } = this.data;
 
     try {
       const result = calculateProfile({
         ...form,
         weightUnit,
         chickenMode,
+        goalChoice: GOAL_OPTIONS[goalIndex].value,
         sex: SEX_OPTIONS[sexIndex].value,
         activityLevel: ACTIVITY_OPTIONS[activityIndex].value
       });
 
       this.setData({ result, showMethod: false });
-      wx.setStorageSync('healthForm', { form, weightUnit, sexIndex, activityIndex, chickenMode });
+      wx.setStorageSync('healthForm', { form, weightUnit, sexIndex, activityIndex, chickenMode, goalIndex });
 
       wx.nextTick(() => {
         wx.pageScrollTo({ selector: '#result', duration: 350 });
@@ -126,48 +143,14 @@ Page({
     if (saved && saved.form) wx.setStorageSync('healthForm', { ...saved, chickenMode });
   },
 
-  onMeatChange(event) {
-    const meatIndex = Number(event.detail.value);
-    if (!Number.isInteger(meatIndex) || meatIndex < 0 || meatIndex >= MEAT_OPTIONS.length) return;
-    this.updateMeatLookup(meatIndex, this.data.meatGrams);
-  },
-
-  onMeatInput(event) {
-    this.updateMeatLookup(this.data.meatIndex, event.detail.value);
-  },
-
-  updateMeatLookup(meatIndex, meatGrams) {
-    const meatId = MEAT_OPTIONS[meatIndex].id;
-    const patch = { meatIndex, meatGrams, meatBasis: meatReference(meatId, 100) };
-    try {
-      this.setData({ ...patch, meatResult: meatReference(meatId, meatGrams), meatError: '' });
-    } catch (error) {
-      this.setData({ ...patch, meatResult: null, meatError: error.message });
-    }
-  },
-
-  toggleFoods() {
-    this.setData({ showFoods: !this.data.showFoods });
-  },
-
-  copyFoodSource(event) {
-    const food = FOODS[event.currentTarget.dataset.id];
-    if (food) wx.setClipboardData({ data: `https://fdc.nal.usda.gov/food-details/${food.sourceId}/nutrients` });
-  },
-
   reset() {
     wx.removeStorageSync('healthForm');
     this.setData({
       sexIndex: 0,
       activityIndex: 2,
+      goalIndex: 0,
       weightUnit: 'jin',
       chickenMode: 'raw',
-      meatIndex: 0,
-      meatGrams: '100',
-      meatBasis: meatReference('chicken', 100),
-      meatResult: meatReference('chicken', 100),
-      meatError: '',
-      showFoods: false,
       form: { heightCm: '', weight: '', age: '' },
       result: null,
       showMethod: false

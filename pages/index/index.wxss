@@ -542,6 +542,11 @@
 .meat-picker { display: flex; align-items: center; justify-content: space-between; gap: 16rpx; padding: 24rpx; border: 2rpx solid #cfe4d7; border-radius: 18rpx; background: #f3f8f5; color: #183d2d; font-size: 26rpx; line-height: 1.6; }
 .meat-picker > text:first-child { flex: 1; min-width: 0; }
 .meat-arrow { flex-shrink: 0; font-size: 23rpx; color: #246446; }
+.custom-meat-form { margin-top: 24rpx; padding: 22rpx 0; border-top: 1rpx solid #e2e9e4; border-bottom: 1rpx solid #e2e9e4; }
+.custom-grid { display: flex; flex-wrap: wrap; gap: 16rpx; margin-top: 20rpx; }
+.custom-grid > view { flex: 1; min-width: 200rpx; }
+.custom-grid .field-label { font-size: 21rpx; line-height: 1.7; }
+.custom-actions { margin-top: 24rpx; }
 .reference-pair > view { flex: 1; min-width: 0; padding: 18rpx; border-radius: 18rpx; background: #f3f8f5; }
 .reference-value { margin: 12rpx 0; font-size: 42rpx; font-weight: 750; color: #183d2d; }
 .reference-value text { display: block; font-size: 22rpx; font-weight: 500; }

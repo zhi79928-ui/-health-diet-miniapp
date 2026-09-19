@@ -23,8 +23,10 @@ function getBmiLevel(bmi) {
   return { key: 'obese', label: '肥胖', color: '#D85C53' };
 }
 
-function getGoal(bmiLevel) {
-  if (bmiLevel.key === 'low') {
+function getGoal(bmiLevel, choice = 'auto') {
+  if (!['auto', 'lose', 'maintain', 'gain'].includes(choice)) throw new Error('请选择有效目标');
+  if (choice === 'lose' && bmiLevel.key === 'low') throw new Error('体重偏轻时不生成减脂计划，请选择维持或增重');
+  if (choice === 'gain' || (choice === 'auto' && bmiLevel.key === 'low')) {
     return {
       key: 'gain',
       label: '健康增重',
@@ -34,7 +36,7 @@ function getGoal(bmiLevel) {
     };
   }
 
-  if (bmiLevel.key === 'high' || bmiLevel.key === 'obese') {
+  if (choice === 'lose' || (choice === 'auto' && (bmiLevel.key === 'high' || bmiLevel.key === 'obese'))) {
     return {
       key: 'lose',
       label: '减脂减重',
@@ -47,7 +49,7 @@ function getGoal(bmiLevel) {
   return {
     key: 'maintain',
     label: '维持塑形',
-    summary: '体重在健康区间，可保持热量并通过训练改善线条。',
+    summary: '以维持热量为起点，结合训练和体重趋势观察变化。',
     calorieFactor: 1,
     proteinPerKg: 1.6
   };
@@ -69,13 +71,14 @@ function validateInput(input) {
   if (weightKg < 30 || weightKg > 250) {
     throw new Error('请输入 30～250 kg（60～500 斤）之间的体重');
   }
-  if (!age || age < 18 || age > 80) {
+  if (!Number.isInteger(age) || age < 18 || age > 80) {
     throw new Error('本工具适用于 18～80 岁成年人');
   }
   if (input.sex !== 'male' && input.sex !== 'female') {
     throw new Error('请选择性别');
   }
-  if (!ACTIVITY_FACTORS[input.activityLevel]) {
+  if (!['jin', 'kg'].includes(input.weightUnit)) throw new Error('请选择体重单位');
+  if (!Object.prototype.hasOwnProperty.call(ACTIVITY_FACTORS, input.activityLevel)) {
     throw new Error('请选择日常活动量');
   }
 
@@ -87,7 +90,8 @@ function calculateProfile(input) {
   const heightM = heightCm / 100;
   const bmi = weightKg / (heightM * heightM);
   const bmiLevel = getBmiLevel(bmi);
-  const goal = getGoal(bmiLevel);
+  const recommendedGoal = getGoal(bmiLevel);
+  const goal = getGoal(bmiLevel, input.goalChoice || 'auto');
   const maleFlag = input.sex === 'male' ? 1 : 0;
 
   // Deurenberg 成人体脂估算公式。它用于趋势参考，不代替体脂秤或医学检测。
@@ -101,10 +105,19 @@ function calculateProfile(input) {
   const calorieFloor = input.sex === 'male' ? 1500 : 1200;
   const targetCalories = Math.max(calorieFloor, roundToTen(tdee * goal.calorieFactor));
 
-  const protein = Math.round(weightKg * goal.proteinPerKg);
-  const fat = Math.round(weightKg * 0.8);
+  let protein = Math.round(weightKg * goal.proteinPerKg);
+  let fat = Math.round(weightKg * 0.8);
+  // 原模板的按体重目标可能超过热量预算。保留 80 g 碳水预算后缩放，
+  // 明确提示目标冲突；这是软件预算约束，不是个体营养处方。
+  const scale = Math.min(1, (targetCalories - 80 * 4) / (protein * 4 + fat * 9));
+  protein = round(protein * scale, 1);
+  fat = round(fat * scale, 1);
   const remainingCalories = targetCalories - protein * 4 - fat * 9;
-  const carbs = Math.max(80, Math.round(remainingCalories / 4));
+  const carbs = round(remainingCalories / 4, 1);
+  const warnings = [];
+  if (scale < 1) warnings.push('按体重计算的蛋白质和脂肪超出热量预算，已按比例调整以保证总量一致。此组合需进一步评估，请向营养专业人士确认适用性。');
+  if (goal.key === 'gain' && bmi >= 24) warnings.push('你选择了增重，但 BMI 已偏高；请结合肌肉量、腰围和专业评估确认目标。');
+  if (targetCalories > tdee && goal.key === 'lose') warnings.push('热量下限高于估算维持热量，此方案不保证形成热量缺口，请进一步评估。');
 
   const normalMinKg = 18.5 * heightM * heightM;
   const normalMaxKg = 23.9 * heightM * heightM;
@@ -124,6 +137,10 @@ function calculateProfile(input) {
     bodyFatLabel: '公式估算',
     normalWeightRange: `${round(normalMinKg, 1)}～${round(normalMaxKg, 1)} kg`,
     goal,
+    recommendedGoal,
+    goalChoice: input.goalChoice || 'auto',
+    warnings,
+    macroShares: { protein: round(protein * 4 / targetCalories * 100), carbs: round(carbs * 4 / targetCalories * 100), fat: round(fat * 9 / targetCalories * 100) },
     bmr: roundToTen(bmr),
     tdee: roundToTen(tdee),
     targetCalories,

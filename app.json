@@ -1,7 +1,22 @@
 {
   "pages": [
-    "pages/index/index"
+    "pages/today/index",
+    "pages/index/index",
+    "pages/foods/index",
+    "pages/progress/index"
   ],
+  "tabBar": {
+    "color": "#718078",
+    "selectedColor": "#176843",
+    "backgroundColor": "#FFFFFF",
+    "borderStyle": "white",
+    "list": [
+      { "pagePath": "pages/today/index", "text": "今日" },
+      { "pagePath": "pages/index/index", "text": "计划" },
+      { "pagePath": "pages/foods/index", "text": "食物" },
+      { "pagePath": "pages/progress/index", "text": "进度" }
+    ]
+  },
   "window": {
     "navigationBarTitleText": "轻体计划",
     "navigationBarBackgroundColor": "#F6FAF7",

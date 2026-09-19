@@ -1,8 +1,8 @@
 <view class="page-shell">
   <view class="hero">
     <view class="hero-badge">PERSONAL NUTRITION</view>
-    <view class="hero-title">算清身体数据，<text>吃得更明白</text></view>
-    <view class="hero-copy">输入基础信息，生成你的体重方向、每日热量和饮食结构。</view>
+    <view class="hero-title">选好目标，<text>安排今天吃什么</text></view>
+    <view class="hero-copy">生成参考食谱，保存到“今日”后换菜、改量和记录。</view>
     <view class="hero-orbit orbit-one"></view>
     <view class="hero-orbit orbit-two"></view>
   </view>
@@ -71,6 +71,7 @@
       </picker>
     </view>
 
+    <view class="field activity-field"><view class="field-label">我的目标</view><picker range="{{goalOptions}}" range-key="label" value="{{goalIndex}}" bindchange="onGoalChange"><view class="picker-value"><text>{{goalOptions[goalIndex].label}}</text><text class="chevron">⌄</text></view></picker><view class="food-note">BMI 只是参考；请结合训练、腰围和个人情况选择目标。</view></view>
     <button class="primary-button" bindtap="calculate">生成我的饮食方案</button>
     <view class="privacy-tip">数据仅保存在你的设备本地，不会上传</view>
   </view>
@@ -109,6 +110,8 @@
         <view class="goal-summary">{{result.goal.summary}}</view>
       </view>
     </view>
+    <view wx:for="{{result.warnings}}" wx:key="*this" class="plan-warning">{{item}}</view>
+    <view class="card"><view class="section-title small">开始执行这份计划</view><view class="weight-guide">保存后，在“今日”替换食材、修改克数并记录实际饮食。如已有记录，只更新未记录的餐次。</view><button class="primary-button" bindtap="saveTodayPlan">保存为今日计划，去换菜 / 记录</button></view>
 
     <view class="card calorie-card">
       <view class="card-title-row">
@@ -127,15 +130,15 @@
       <view class="macro-list">
         <view class="macro-item protein">
           <view class="macro-top"><text>蛋白质</text><text class="strong-text">{{result.macros.protein}} g</text></view>
-          <view class="macro-track"><view style="width: 72%"></view></view>
+          <view class="macro-track"><view style="width: {{result.macroShares.protein}}%"></view></view><view class="food-note">参考能量占比 {{result.macroShares.protein}}%</view>
         </view>
         <view class="macro-item carbs">
           <view class="macro-top"><text>碳水化合物</text><text class="strong-text">{{result.macros.carbs}} g</text></view>
-          <view class="macro-track"><view style="width: 86%"></view></view>
+          <view class="macro-track"><view style="width: {{result.macroShares.carbs}}%"></view></view><view class="food-note">参考能量占比 {{result.macroShares.carbs}}%</view>
         </view>
         <view class="macro-item fat">
           <view class="macro-top"><text>脂肪</text><text class="strong-text">{{result.macros.fat}} g</text></view>
-          <view class="macro-track"><view style="width: 54%"></view></view>
+          <view class="macro-track"><view style="width: {{result.macroShares.fat}}%"></view></view><view class="food-note">参考能量占比 {{result.macroShares.fat}}%</view>
         </view>
       </view>
 
@@ -183,7 +186,7 @@
           <text>{{item.label}}<text class="table-unit">{{item.unit}}</text></text><text>{{item.target}}</text><text>{{item.actual}}</text><text>{{item.delta}}</text>
         </view>
         <view wx:if="{{result.foodPlan.needsAdjustment}}" class="plan-warning">部分营养与目标相差超过 10%，此食谱尚未达标，需要调整食物组合或份量。</view>
-        <view class="weight-guide">这是可称量的单日配餐示例，未考虑个人过敏、乳糖不耐受及口味偏好。不能随意等克替换食物；加酱料、裹粉或额外用油需另计。</view>
+        <view class="weight-guide">这是单日配餐示例，未考虑过敏、乳糖不耐受或口味偏好。保存到“今日”后可换菜、改量及添加实际用油；不适合的食物请移除或替换。替换后需核对全天合计。</view>
       </view>
     </view>
 
@@ -204,44 +207,6 @@
       <view wx:if="{{showMethod}}" class="method-body">
         <text>BMI 用于判断体重区间；体脂率采用成人公式估算，会受肌肉量、年龄等因素影响。每日热量基于 Mifflin-St Jeor 基础代谢公式和活动系数计算。</text>
         <text>本结果仅用于健康管理参考，不用于疾病诊断。孕期、哺乳期、未成年人、有慢性病或进食障碍史的人群，请咨询医生或注册营养师。</text>
-      </view>
-    </view>
-  </view>
-
-  <view class="card meat-card">
-    <view class="eyebrow">MEAT PROTEIN</view>
-    <view class="section-title small">肉类蛋白质速查</view>
-    <view class="field-label meat-label">选择肉类</view>
-    <picker mode="selector" range="{{meatOptions}}" range-key="label" value="{{meatIndex}}" bindchange="onMeatChange" aria-label="选择肉类及部位">
-      <view class="meat-picker"><text>{{meatOptions[meatIndex].label}}</text><text class="meat-arrow">更换 ▾</text></view>
-    </picker>
-    <view class="weight-guide">每 100 g 可食部参考。生重和熟重分别称取，不代表同一块肉做熟前后。</view>
-    <view class="reference-pair">
-      <view><text class="weight-badge">生重 · 可食部</text><view class="reference-value">{{meatBasis.raw.protein}} <text>g 蛋白质</text></view><view class="food-note">{{meatBasis.raw.calories}} kcal / 100 g</view></view>
-      <view><text class="weight-badge">熟重 · {{meatOptions[meatIndex].cookedLabel}}</text><view class="reference-value">{{meatBasis.cooked.protein}} <text>g 蛋白质</text></view><view class="food-note">{{meatBasis.cooked.calories}} kcal / 100 g</view></view>
-    </view>
-    <view class="weight-guide"><view>生重：{{meatBasis.raw.note}}</view><view>熟重：{{meatBasis.cooked.note}}</view></view>
-    <view class="field-label">输入所选肉类重量，分别查看生重 / 熟重结果</view>
-    <view class="input-wrap"><input type="digit" value="{{meatGrams}}" bindinput="onMeatInput" placeholder="例如 150" aria-label="所选肉类重量（克）" /><text class="unit">g</text></view>
-    <view wx:if="{{meatError}}" class="plan-warning">{{meatError}}</view>
-    <view wx:if="{{meatResult}}" class="calculator-results">
-      <view>若为 {{meatResult.raw.grams}} g 生重：约 <text class="food-grams">{{meatResult.raw.protein}} g 蛋白质</text>，{{meatResult.raw.calories}} kcal</view>
-      <view>若为 {{meatResult.cooked.grams}} g 熟重（{{meatOptions[meatIndex].cookedLabel}}）：约 <text class="food-grams">{{meatResult.cooked.protein}} g 蛋白质</text>，{{meatResult.cooked.calories}} kcal</view>
-    </view>
-    <view class="weight-guide">熟肉每 100 g 的蛋白质通常更集中，主要因为烹调失水，并不是凭空增加蛋白质。部位、肥瘦和做法会影响数值；有包装时优先采用营养标签。</view>
-    <view class="weight-guide">计算方式：食物克数 ÷ 100 × 对应状态的每 100 g 营养值。若要知道同一批肉的生熟重量关系，请分别称量烹调前后总重；本工具不使用固定缩水比例。</view>
-    <view class="source-actions"><button size="mini" data-id="{{meatBasis.raw.id}}" bindtap="copyFoodSource">复制生重来源</button><button size="mini" data-id="{{meatBasis.cooked.id}}" bindtap="copyFoodSource">复制熟重来源</button></view>
-    <view class="food-note">USDA SR Legacy：{{meatBasis.raw.sourceId}} / {{meatBasis.cooked.sourceId}}。数值为近似参考；生重指烹调前称量，肉类请做熟后食用。</view>
-  </view>
-
-  <view class="method-card">
-    <view class="method-head" bindtap="toggleFoods"><text>食物营养参考表 · 每 100 g</text><text>{{showFoods ? '收起' : '展开'}}</text></view>
-    <view wx:if="{{showFoods}}" class="food-reference-list">
-      <view wx:for="{{foodReferences}}" wx:key="id" class="food-row">
-        <view class="food-title">{{item.name}} <text class="weight-badge">{{item.state}}</text></view>
-        <view class="food-nutrients">{{item.calories}} kcal · 蛋白 {{item.protein}} g · 碳水 {{item.carbs}} g · 脂肪 {{item.fat}} g</view>
-        <view class="food-note">{{item.note}}</view>
-        <button size="mini" class="source-link" data-id="{{item.id}}" bindtap="copyFoodSource">复制数据来源</button>
       </view>
     </view>
   </view>
