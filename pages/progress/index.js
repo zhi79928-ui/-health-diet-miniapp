@@ -1,12 +1,14 @@
 const { dateKey, validDate, readWeights, weightEntry, weightTrend, readDays } = require('../../utils/tracker');
+const { readCheckins, statistics, monthCells } = require('../../utils/habits');
 Page({
-  data: { today: dateKey(), date: dateKey(), weight: '', unitIndex: 0, units: ['kg', '斤'], rows: [], trend: {}, dayRows: [], message: '', error: '' },
+  data: { today: dateKey(), date: dateKey(), month: dateKey().slice(0, 7), weekdays: ['日', '一', '二', '三', '四', '五', '六'], cells: [], habit: {}, habitError: '', selectedCheckin: '', weight: '', unitIndex: 0, units: ['kg', '斤'], rows: [], trend: {}, dayRows: [], message: '', error: '' },
   onShow() {
     const today = dateKey();
     this.setData({ date: this.data.date === this.data.today ? today : this.data.date, today });
     this.loadRecords();
   },
   loadRecords() {
+    this.loadCalendar();
     try {
       const rows = readWeights();
       const days = readDays();
@@ -15,6 +17,27 @@ Page({
       wx.nextTick(() => this.drawTrend());
     } catch (error) { this.setData({ error: error.message || '读取失败，请保留本地数据并重试' }); }
   },
+  loadCalendar() {
+    try { const records = readCheckins(); this.setData({ currentMonth: dateKey().slice(0, 7), habit: statistics(records), cells: monthCells(this.data.month, records), habitError: '', selectedCheckin: '' }); }
+    catch (error) { this.setData({ habitError: error.message, cells: [] }); }
+  },
+  changeMonth(event) {
+    const step = Number(event.currentTarget.dataset.step);
+    if (step !== -1 && step !== 1) return;
+    const [y, m] = this.data.month.split('-').map(Number);
+    const month = dateKey(new Date(y, m - 1 + step, 1)).slice(0, 7);
+    if (month > dateKey().slice(0, 7)) return;
+    this.setData({ month }); this.loadCalendar();
+  },
+  inspectCheckin(event) {
+    const date = event.currentTarget.dataset.date;
+    if (!validDate(date) || date > dateKey()) return;
+    try {
+      const row = readCheckins()[date];
+      this.setData({ selectedCheckin: row ? `${date} 已打卡 · 当时记录 ${row.meals} 餐${row.weight ? '，已记录体重' : ''}` : `${date} 暂无打卡记录` });
+    } catch (error) { this.setData({ habitError: error.message }); }
+  },
+  goToday() { wx.switchTab({ url: '/pages/today/index' }); },
   onDateChange(event) { if (validDate(event.detail.value)) this.setData({ date: event.detail.value, message: '' }); },
   onWeightInput(event) { this.setData({ weight: event.detail.value, message: '' }); },
   onUnitChange(event) {

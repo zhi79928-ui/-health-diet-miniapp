@@ -1,4 +1,13 @@
 <view class="screen">
+  <view class="visual-hero"><image class="hero-art" src="/assets/meal-hero.jpg" mode="aspectFill" /><view class="hero-shade"></view><view class="visual-copy"><view class="eyebrow">轻体计划 · DAILY BALANCE</view><view class="visual-title">好好吃饭，<view>慢慢变好。</view></view><view class="visual-sub">从一餐开始，留下每天的小进步</view></view></view>
+  <view class="panel habit-panel">
+    <view class="topline"><view class="heading">今日小目标</view><text class="badge">连续 {{habit.streak || 0}} 天</text></view>
+    <view class="muted">{{today}} · 完成任意一项后，主动打卡。无需每天称重。</view>
+    <view class="habit-tasks"><view class="task {{tasks.meals ? 'task-done' : ''}}"><text class="task-symbol">{{tasks.meals ? '✓' : '01'}}</text><view>记录一餐<view class="muted">{{tasks.meals ? '已记录 ' + tasks.meals + ' 餐' : '在下方记录实际吃的食物'}}</view></view></view><view class="task {{tasks.weight ? 'task-done' : ''}}" bindtap="goProgress"><text class="task-symbol">{{tasks.weight ? '✓' : '02'}}</text><view>记录体重 · 可选<view class="muted">{{tasks.weight ? '今天已保存' : '去记录 →'}}</view></view></view></view>
+    <view wx:if="{{habitError}}" class="notice">{{habitError}}</view>
+    <button class="primary" disabled="{{habit.done || habitError || (tasks.meals ? false : !tasks.weight)}}" bindtap="completeCheckin">{{habit.done ? '✓ 今日已打卡，明天继续' : '完成今日打卡'}}</button>
+    <view class="topline space"><text class="muted">累计 {{habit.total || 0}} 天，每一步都算数</text><button size="mini" class="small-button" bindtap="goProgress">打卡日历 →</button></view>
+  </view>
   <view class="topline"><view><view class="eyebrow">ONE MEAL AT A TIME</view><view class="title">今天，吃得明白</view></view><picker mode="date" value="{{selectedDate}}" end="{{today}}" bindchange="onDateChange"><view class="date-pill">{{selectedDate}} ▾</view></picker></view>
   <view wx:if="{{error}}" class="notice">{{error}}</view>
   <view wx:if="{{!day}}" class="panel empty">

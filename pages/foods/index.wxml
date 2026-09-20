@@ -1,4 +1,5 @@
 <view class="page-shell">
+  <view class="food-visual"><image src="/assets/meal-hero.jpg" mode="aspectFill" /><view><view class="eyebrow">KNOW YOUR FOOD</view><view class="section-title small">每一口，心里有数</view><view class="weight-guide">选对食物，也看清生重与熟重</view></view></view>
   <view class="card meat-card">
     <view class="eyebrow">MEAT PROTEIN</view>
     <view class="section-title small">肉类蛋白质速查</view>

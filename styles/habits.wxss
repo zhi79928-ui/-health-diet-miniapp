@@ -1,0 +1,30 @@
+.visual-hero { position: relative; height: 360rpx; overflow: hidden; border-radius: 32rpx; margin-bottom: 28rpx; background: #f3ecdc; }
+.hero-art { position: absolute; width: 100%; height: 100%; }
+.hero-shade { position: absolute; width: 100%; height: 100%; background: linear-gradient(90deg,rgba(249,246,232,.95),rgba(249,246,232,.6) 45%,rgba(249,246,232,0) 85%); }
+.visual-copy { position: relative; padding: 38rpx 30rpx; }
+.visual-title { font-size: 44rpx; font-weight: 800; line-height: 1.45; color: #183f30; margin: 24rpx 0 12rpx; }
+.visual-sub { font-size: 22rpx; color: #526957; max-width: 340rpx; line-height: 1.6; }
+.compact-hero { height: 280rpx; }
+.compact-hero .visual-title { font-size: 36rpx; }
+.habit-panel { border: 1rpx solid #deeadb; }
+.habit-tasks { margin: 26rpx 0; }
+.task { display: flex; gap: 20rpx; align-items: center; padding: 20rpx; border-radius: 20rpx; background: #f7f7f1; margin-bottom: 12rpx; font-size: 26rpx; }
+.task-done { background: #edf6ee; }
+.task-symbol { background: #fff; border-radius: 50%; width: 56rpx; height: 56rpx; line-height: 56rpx; text-align: center; color: #297452; font-weight: 700; flex-shrink: 0; }
+.habit-stats { display: flex; justify-content: space-around; text-align: center; background: #f3f7ef; border-radius: 24rpx; padding: 24rpx 8rpx; margin: 24rpx 0; color: #637265; font-size: 23rpx; }
+.stat-number { color: #246348; font-size: 48rpx; font-weight: 800; margin-bottom: 6rpx; }
+.calendar-nav { margin: 26rpx 0 16rpx; }
+.calendar-nav button { margin: 0; }
+.calendar-grid { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: 8rpx; }
+.calendar-week { text-align: center; font-size: 22rpx; padding: 12rpx 0; color: #7a887a; }
+.calendar-cell { position: relative; box-sizing: border-box; width: 100%; height: 76rpx; line-height: 62rpx; padding: 0; margin: 0; border-radius: 16rpx; font-size: 25rpx; background: #f7f8f4; color: #3f5345; border: 2rpx solid transparent; }
+.calendar-cell::after { border: none; }
+.calendar-cell.checked { color: #fff; background: #2d805c; }
+.calendar-cell.is-today { border-color: #dd9b44; }
+.calendar-cell.blank { visibility: hidden; }
+.calendar-cell[disabled] { color: #bbc2b9; background: #fafbf8; }
+.calendar-dot { position: absolute; bottom: 4rpx; left: 0; width: 100%; font-size: 9rpx; line-height: 12rpx; }
+.achievement-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10rpx; margin-top: 24rpx; }
+.achievement { text-align: center; border-radius: 22rpx; padding: 18rpx 0; background: #f5f6f2; color: #778275; font-size: 25rpx; }
+.achievement.earned { background: #fff3da; color: #8b6225; }
+.medal { font-size: 46rpx; line-height: 1.5; }

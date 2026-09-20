@@ -1,4 +1,16 @@
 <view class="screen">
+  <view class="visual-hero compact-hero"><image class="hero-art" src="/assets/meal-hero.jpg" mode="aspectFill" /><view class="hero-shade"></view><view class="visual-copy"><view class="eyebrow">MY LITTLE WINS</view><view class="visual-title">每一天，都算数。</view><view class="visual-sub">记录自己，无需和别人比较</view></view></view>
+  <view class="panel">
+    <view class="topline"><view class="heading">我的打卡日历</view><text class="badge">{{habit.done ? '今日已打卡' : '今日待打卡'}}</text></view>
+    <view wx:if="{{habitError}}" class="notice">{{habitError}}</view>
+    <view class="habit-stats"><view><view class="stat-number">{{habit.streak || 0}}</view><text>连续天数</text></view><view><view class="stat-number">{{habit.total || 0}}</view><text>累计天数</text></view><view><view class="stat-number">{{habit.longest || 0}}</view><text>最长连续</text></view></view>
+    <view class="topline calendar-nav"><button class="small-button" size="mini" data-step="-1" bindtap="changeMonth" aria-label="上个月">‹</button><text class="strong">{{month}}</text><button class="small-button" size="mini" data-step="1" bindtap="changeMonth" disabled="{{month >= currentMonth}}" aria-label="下个月">›</button></view>
+    <view class="calendar-grid"><view wx:for="{{weekdays}}" wx:key="*this" class="calendar-week">{{item}}</view><button wx:for="{{cells}}" wx:key="key" class="calendar-cell {{item.done ? 'checked' : ''}} {{item.today ? 'is-today' : ''}} {{item.blank ? 'blank' : ''}}" disabled="{{item.blank || item.future}}" data-date="{{item.date}}" bindtap="inspectCheckin" aria-label="{{item.date + (item.done ? ' 已打卡' : ' 未打卡')}}">{{item.n}}<text wx:if="{{item.done}}" class="calendar-dot">●</text></button></view>
+    <view class="muted space">绿色表示已打卡，描边表示今天。点击日期查看记录。</view><view wx:if="{{selectedCheckin}}" class="preview">{{selectedCheckin}}</view>
+    <button wx:if="{{!habit.done}}" class="primary space" bindtap="goToday">去今日记录并打卡</button>
+    <view class="muted space">仅支持当天主动打卡；打卡保留完成时的记录摘要。今天尚未打卡时，连续天数从昨天向前计算。</view>
+  </view>
+  <view class="panel"><view class="heading">积累小成就</view><view class="muted">按累计打卡天数解锁，中断也不会失去已获得的徽章。</view><view class="achievement-grid"><view wx:for="{{habit.badges}}" wx:key="days" class="achievement {{item.earned ? 'earned' : ''}}"><view class="medal">{{item.earned ? '✦' : '◇'}}</view><view>{{item.days}} 天</view><view class="muted">{{item.earned ? '已点亮' : '待解锁'}}</view></view></view></view>
   <view class="eyebrow">SMALL STEPS, REAL PROGRESS</view><view class="title">看看自己的变化</view>
   <view wx:if="{{error}}" class="notice">{{error}}</view>
   <view class="panel"><view class="heading">记录体重</view><view class="muted">尽量在相近时间和条件下称量，观察趋势。体重记录不会自动改动饮食目标。</view><view class="label">称重日期</view><picker mode="date" value="{{date}}" end="{{today}}" bindchange="onDateChange"><view class="select">{{date}} ▾</view></picker><view class="label">体重</view><view class="actions"><input class="input weight-input" type="digit" value="{{weight}}" bindinput="onWeightInput" placeholder="填写实际体重" /><picker range="{{units}}" value="{{unitIndex}}" bindchange="onUnitChange"><view class="select">{{units[unitIndex]}} ▾</view></picker></view><button class="primary space" bindtap="saveWeight">保存体重</button><view wx:if="{{message}}" class="muted space">{{message}}</view></view>

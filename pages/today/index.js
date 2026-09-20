@@ -1,13 +1,24 @@
 const { FOODS, foodPortion } = require('../../utils/foods');
+const { readCheckins, evidence, checkIn, statistics } = require('../../utils/habits');
 const { dateKey, validDate, previousDate, refreshDay, copyPlan, replaceFood, addFood, removeFood, toggleMeal, replacementGrams, readDays, saveDay } = require('../../utils/tracker');
 const options = Object.keys(FOODS).map(id => ({ id, label: `${FOODS[id].name} · ${FOODS[id].state}` }));
 Page({
   data: { today: dateKey(), selectedDate: dateKey(), day: null, error: '', editor: null, foodOptions: options,
-    swapModes: ['尽量保持蛋白质', '尽量保持热量', '手动填写克数'] },
+    habit: {}, tasks: {}, habitError: '', swapModes: ['尽量保持蛋白质', '尽量保持热量', '手动填写克数'] },
   onShow() {
     const next = dateKey();
     const selected = this.data.selectedDate === this.data.today ? next : this.data.selectedDate;
     this.loadDay(selected);
+    this.loadHabits();
+  },
+  loadHabits() {
+    try { this.setData({ habit: statistics(readCheckins()), tasks: evidence(), habitError: '' }); }
+    catch (error) { this.setData({ habitError: error.message }); }
+  },
+  goProgress() { wx.switchTab({ url: '/pages/progress/index' }); },
+  completeCheckin() {
+    try { checkIn(this.data.today); this.loadHabits(); wx.showToast({ title: '今天的一小步，已记下', icon: 'none' }); }
+    catch (error) { this.report(error); this.loadDay(dateKey()); this.loadHabits(); }
   },
   loadDay(selectedDate) {
     try {
@@ -30,6 +41,7 @@ Page({
   persist(day) {
     const saved = saveDay(day); // 写入成功后才更新界面，失败保留原记录。
     this.setData({ day: saved, error: '', editor: null });
+    this.loadHabits();
   },
   copyYesterday() {
     try {

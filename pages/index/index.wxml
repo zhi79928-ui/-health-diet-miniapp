@@ -1,10 +1,9 @@
 <view class="page-shell">
   <view class="hero">
+    <image class="plan-art" src="/assets/meal-hero.jpg" mode="aspectFill" />
     <view class="hero-badge">PERSONAL NUTRITION</view>
     <view class="hero-title">选好目标，<text>安排今天吃什么</text></view>
     <view class="hero-copy">生成参考食谱，保存到“今日”后换菜、改量和记录。</view>
-    <view class="hero-orbit orbit-one"></view>
-    <view class="hero-orbit orbit-two"></view>
   </view>
 
   <view class="card form-card">

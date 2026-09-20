@@ -14,7 +14,7 @@
       { "pagePath": "pages/today/index", "text": "今日" },
       { "pagePath": "pages/index/index", "text": "计划" },
       { "pagePath": "pages/foods/index", "text": "食物" },
-      { "pagePath": "pages/progress/index", "text": "进度" }
+      { "pagePath": "pages/progress/index", "text": "打卡" }
     ]
   },
   "window": {

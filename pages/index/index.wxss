@@ -3,6 +3,12 @@
   padding: 24rpx;
   box-sizing: border-box;
 }
+.plan-art { position: absolute; right: 0; top: 0; width: 100%; height: 100%; opacity: .28; }
+.hero-badge { position: relative; z-index: 2; }
+.food-visual { position: relative; height: 240rpx; border-radius: 28rpx; overflow: hidden; background: #f5ecd9; margin-bottom: 24rpx; }
+.food-visual image { position: absolute; width: 100%; height: 100%; opacity: .45; }
+.food-visual > view { position: relative; padding: 36rpx 28rpx; background: linear-gradient(90deg, #f8f4e9, transparent); height: 100%; box-sizing: border-box; }
+.food-visual .eyebrow { color: #426e4e; margin-bottom: 18rpx; }
 
 .hero {
   position: relative;

@@ -1,1 +1,2 @@
 @import "../../styles/tracking.wxss";
+@import "../../styles/habits.wxss";
