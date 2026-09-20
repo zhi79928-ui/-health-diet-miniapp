@@ -36,7 +36,7 @@
   "compileType": "miniprogram",
   "cloudfunctionRoot": "cloudfunctions/",
   "libVersion": "3.5.7",
-  "appid": "touristappid",
+  "appid": "wx83c3bc551adf216a",
   "projectname": "health-diet-miniapp",
   "condition": {}
 }
