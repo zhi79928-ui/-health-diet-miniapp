@@ -7,4 +7,13 @@
   </view>
   <view class="panel"><view class="heading">账号与记录说明</view><view class="muted space">登录用于验证微信身份，不要求手机号、昵称或头像。账号编号不作为数据访问凭证。</view><view class="muted space">本版本尚未启用云备份。登录不会上传或同步饮食、体重、打卡及自定义食物；这些记录仍属于本机，清除缓存或更换设备不会自动恢复。退出登录保留本机记录，共用设备上的其他使用者也可能看到这些记录。</view></view>
   <button class="secondary" bindtap="goToday">回到今日，记录一餐</button>
+  <view class="panel"><view class="heading">打卡提醒</view><view class="muted space">按北京时间，临近所选时间检查打卡状态。未打卡才提醒；每次主动订阅安排一次，不是永久每日推送。若今天已过提醒时间或已同步打卡，则安排明天。</view>
+    <view class="label">希望收到提醒的时间</view><picker mode="time" value="{{reminderTime}}" bindchange="onReminderTime"><view class="select">{{reminderTime}}（北京时间） ▾</view></picker>
+    <view wx:if="{{!reminderReady}}" class="notice">微信推送尚未开通，目前只能保存时间偏好，关闭小程序后不会收到通知。</view>
+    <view class="muted space">点击订阅并在微信弹窗同意后，会将提醒时间和当天是否打卡同步到云端，用于跳过已完成日期；不上传食物明细或体重。离线打卡未同步时仍可能收到消息。系统约每分钟检查一次，送达时间可能延迟。</view>
+    <button class="primary space" disabled="{{!reminderReady || reminderBusy}}" loading="{{reminderBusy}}" bindtap="subscribeReminder">订阅下一次未打卡提醒</button>
+    <view wx:if="{{reminderJob}}" class="preview">{{reminderJob.date}} {{reminderJob.time}} · {{reminderJob.label}}</view>
+    <button wx:if="{{reminderReady}}" class="secondary space" disabled="{{reminderBusy}}" bindtap="cancelReminder">取消待发送提醒</button>
+    <view wx:if="{{reminderMessage}}" class="muted space">{{reminderMessage}}</view>
+  </view>
 </view>

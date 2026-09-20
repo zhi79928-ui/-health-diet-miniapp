@@ -1,4 +1,6 @@
 <view class="screen">
+  <view wx:if="{{reminderSyncError}}" class="notice">{{reminderSyncError}}</view>
+  <button class="secondary space" bindtap="openLibrary">★ 我的常吃 · 一键加入食物 / 整餐</button>
   <view class="visual-hero"><image class="hero-art" src="/assets/meal-hero.jpg" mode="aspectFill" /><view class="hero-shade"></view><view class="visual-copy"><view class="eyebrow">轻体计划 · DAILY BALANCE</view><view class="visual-title">好好吃饭，<view>慢慢变好。</view></view><view class="visual-sub">从一餐开始，留下每天的小进步</view></view></view>
   <view class="panel habit-panel">
     <view class="topline"><view class="heading">今日小目标</view><text class="badge">连续 {{habit.streak || 0}} 天</text></view>
@@ -38,8 +40,11 @@
       <view wx:for="{{meal.foods}}" wx:for-item="food" wx:for-index="foodIndex" wx:key="rowKey" class="food-line">
         <view class="topline"><view class="food-main"><view>{{food.name}} <text class="strong">{{food.grams}} {{food.unit || 'g'}}</text></view><view class="badge">{{food.state}}</view></view><button size="mini" class="small-button" disabled="{{meal.logged}}" data-meal="{{mealIndex}}" data-food="{{foodIndex}}" bindtap="openEditor">换菜 / 改量</button></view>
         <view class="muted">{{food.calories}} kcal · 蛋白 {{food.protein}} g · 碳水 {{food.carbs}} g · 脂肪 {{food.fat}} g</view>
+        <view class="badge space">做法参考：{{food.cookingLabel}}</view>
+        <view class="actions space"><button size="mini" class="small-button" data-meal="{{mealIndex}}" data-food="{{foodIndex}}" bindtap="collectFood">☆ 收藏食物</button><button size="mini" class="small-button" data-meal="{{mealIndex}}" data-food="{{foodIndex}}" bindtap="showCooking">做法与称重 →</button></view>
       </view>
       <view wx:if="{{!meal.foods.length}}" class="muted space">这餐暂无食物，请添加实际吃的食物。</view>
+      <view class="actions space"><button size="mini" class="small-button" data-meal="{{mealIndex}}" bindtap="collectMeal">保存为常吃搭配</button><button size="mini" class="small-button" disabled="{{meal.logged}}" data-meal="{{mealIndex}}" bindtap="openLibrary">从我的常吃添加</button></view>
       <view class="actions space"><button class="secondary" disabled="{{meal.logged}}" data-meal="{{mealIndex}}" data-add="yes" bindtap="openEditor">＋ 添加食物</button><button class="{{meal.logged ? 'secondary' : 'primary'}}" data-meal="{{mealIndex}}" bindtap="toggleMeal">{{meal.logged ? '取消这餐记录' : '按以上食物记录这餐'}}</button></view>
       <view class="muted space">{{meal.logged ? '修改已吃食物：先取消记录，改完再记录。' : '没有全吃完？先改成实际克数再记录。额外用油也需添加。'}}</view>
     </view>
@@ -79,3 +84,17 @@
     <button wx:if="{{editor.original}}" class="secondary space" bindtap="removeEditorFood">移除这项食物</button>
   </scroll-view>
 </view>
+<view wx:if="{{library}}" class="overlay"><scroll-view scroll-y="true" class="editor-sheet">
+  <view class="topline"><view class="heading">我的常吃</view><button class="small-button" size="mini" bindtap="closeLibrary">关闭</button></view>
+  <view class="muted">收藏保存在本机。加入后可改克数，吃完再记录；会追加到餐次，不替换已有食物。</view>
+  <view class="label">加入 {{selectedDate}} 的哪一餐？</view><picker range="{{mealNames}}" value="{{library.mealIndex}}" bindchange="onLibraryMeal"><view class="select">{{mealNames[library.mealIndex]}} ▾</view></picker>
+  <view wx:if="{{!library.rows.length}}" class="preview">还没有收藏。在餐次里点“收藏食物”或“保存为常吃搭配”，下次就在这里一键添加。</view>
+  <view wx:for="{{library.rows}}" wx:key="id" class="food-line"><view class="heading">{{item.name}}</view><text class="badge">{{item.kind === 'meal' ? '整餐搭配' : '常吃食物'}}</text><view class="muted space">{{item.summary}}</view><view class="actions space"><button class="primary" size="mini" data-id="{{item.id}}" bindtap="useFavorite">加入这餐</button><button class="secondary" size="mini" data-id="{{item.id}}" bindtap="removeFavorite">移除收藏</button></view></view>
+</scroll-view></view>
+<view wx:if="{{favoriteDraft}}" class="overlay"><view class="editor-sheet"><view class="heading">保存整餐搭配</view><view class="muted space">以后不必逐个搜索食物，加入后仍可按当天实际份量调整。</view><view class="label">给搭配起个名字</view><input class="input" maxlength="40" value="{{favoriteDraft.name}}" bindinput="onFavoriteName" placeholder="例如：豆浆燕麦早餐" /><view class="actions space"><button class="secondary" bindtap="closeFavoriteDraft">取消</button><button class="primary" bindtap="saveMealFavorite">保存搭配</button></view></view></view>
+<view wx:if="{{recipe}}" class="overlay"><scroll-view scroll-y="true" class="editor-sheet">
+  <view class="topline"><view class="heading">{{recipe.name}}</view><button class="small-button" size="mini" bindtap="closeCooking">关闭</button></view><text class="badge">{{recipe.state}}</text>
+  <view class="actions space"><button wx:for="{{recipe.methods}}" wx:key="key" size="mini" class="{{recipe.methodIndex === index ? 'primary' : 'secondary'}}" data-index="{{index}}" bindtap="onCookingMethod">{{item.label}}</button></view>
+  <view wx:if="{{recipe.active}}" class="preview"><view class="heading">{{recipe.active.label}} · 操作步骤</view><view wx:for="{{recipe.active.steps}}" wx:key="*this" class="space">{{index + 1}}. {{item}}</view></view>
+  <view wx:if="{{recipe.safety}}" class="notice">{{recipe.safety}}</view><view class="muted space">{{recipe.weightNote}}</view><view class="muted space">{{recipe.note}}</view>
+</scroll-view></view>

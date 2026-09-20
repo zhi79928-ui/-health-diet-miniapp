@@ -1,0 +1,36 @@
+const assert = require('assert');
+const { foodPortion } = require('../utils/foods');
+const { labelPortion } = require('../utils/label-foods');
+const { createDiary, toggleMeal, dateKey, saveDay } = require('../utils/tracker');
+const { readFavorites, saveFavorite, deleteFavorite, applyFavorite } = require('../utils/favorites');
+const { cookingGuide } = require('../utils/cooking');
+let storage = {}, fail = false, definition;
+global.wx = { getStorageSync: key=>storage[key], setStorageSync(key,value) { if (fail) throw new Error('full'); storage[key]=JSON.parse(JSON.stringify(value)); }, showToast() {} };
+global.Page = value=>definition=value;
+function page() { require('../pages/today/index');return {...definition,data:JSON.parse(JSON.stringify(definition.data)),setData(patch){for(const key in patch){const p=key.split('.');let target=this.data;p.slice(0,-1).forEach(k=>target=target[k]);target[p[p.length-1]]=patch[key];}}}; }
+const foods = [foodPortion('soyMilk',300),foodPortion('oats',60)];
+saveFavorite('我的早餐', foods, 'meal'); saveFavorite('我的早餐', foods, 'meal');assert.equal(readFavorites().length,1);
+foods[0].grams=10;assert.equal(readFavorites()[0].foods[0].grams,300);
+const favorite=readFavorites()[0];let day=applyFavorite(createDiary(dateKey()),0,favorite);
+assert.equal(day.meals[0].protein,18.8);assert.equal(day.meals[0].logged,false);
+day=applyFavorite(day,0,favorite);assert.equal(day.meals[0].foods.length,4); // Explicitly append, never overwrite.
+assert.throws(()=>applyFavorite(toggleMeal(day,0),0,favorite),/已记录/);
+const custom=labelPortion({name:'我的饮料',state:'即饮',unit:'mL',protein:'3',carbs:'2',fat:'1',calories:''},250);
+saveFavorite('饮料',[custom],'food');const drink=readFavorites()[0];assert.equal(applyFavorite(createDiary(dateKey()),1,drink).meals[1].foods[0].unit,'mL');
+fail=true;assert.throws(()=>saveFavorite('另一个',[custom],'food'));assert.equal(readFavorites().length,2);assert.throws(()=>deleteFavorite(drink.id));fail=false;
+deleteFavorite(drink.id);assert.equal(readFavorites().length,1);
+storage.favoriteMealsV1={broken:true};assert.throws(readFavorites,/异常/);assert.throws(()=>saveFavorite('x',[custom],'food'));assert.deepStrictEqual(storage.favoriteMealsV1,{broken:true});
+storage={};let screen=page();screen.onShow();screen.openLibrary({currentTarget:{dataset:{}}});assert.equal(screen.data.library.rows.length,0);
+saveFavorite('早餐',favorite.foods,'meal');screen.openLibrary({currentTarget:{dataset:{meal:'0'}}});const id=screen.data.library.rows[0].id;
+fail=true;screen.useFavorite({currentTarget:{dataset:{id}}});assert.equal(screen.data.day,null);assert.ok(screen.data.library);fail=false;
+screen.useFavorite({currentTarget:{dataset:{id}}});assert.equal(screen.data.day.meals[0].carbs,44.9);assert.equal(screen.data.library,null);
+screen.useFavorite({currentTarget:{dataset:{id}}});assert.equal(screen.data.day.meals[0].foods.length,2);
+screen.collectFood({currentTarget:{dataset:{meal:0,food:0}}});assert.equal(readFavorites().length,2);
+screen.collectMeal({currentTarget:{dataset:{meal:0}}});screen.onFavoriteName({detail:{value:'豆浆燕麦'}});screen.saveMealFavorite();assert.equal(readFavorites()[0].name,'豆浆燕麦');
+assert.ok(cookingGuide(foodPortion('chickenRaw',100)).safety.includes('74'));
+assert.deepStrictEqual(cookingGuide(foodPortion('chickenCooked',100)).methods.map(x=>x.key),['bake']);
+assert.deepStrictEqual(cookingGuide(foodPortion('lambCooked',100)).methods.map(x=>x.key),['braise']);
+assert.ok(cookingGuide(foodPortion('oats',100)).methods[0].steps[0].includes('干重'));
+assert.equal(cookingGuide(custom).methods.length,0);
+screen.showCooking({currentTarget:{dataset:{meal:0,food:1}}});assert.equal(screen.data.recipe.active.key,'oats');screen.closeCooking();assert.equal(screen.data.recipe,null);
+console.log('Favorites and recipes: snapshots, append-only meals, labels, duplicate saves, failed writes, UI flow and cooking states passed');

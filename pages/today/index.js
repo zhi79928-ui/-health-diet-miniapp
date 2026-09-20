@@ -1,5 +1,8 @@
 const { FOODS, foodPortion } = require('../../utils/foods');
 const { STAPLE_IDS } = require('../../utils/staples');
+const { readFavorites, saveFavorite, deleteFavorite, applyFavorite } = require('../../utils/favorites');
+const { cookingGuide } = require('../../utils/cooking');
+const reminders = require('../../utils/reminders');
 const { labelPortion } = require('../../utils/label-foods');
 const { createDiary, setLabelFood } = require('../../utils/tracker');
 const { readCheckins, evidence, checkIn, statistics } = require('../../utils/habits');
@@ -7,12 +10,16 @@ const { dateKey, validDate, previousDate, refreshDay, copyPlan, replaceFood, add
 const options = Object.keys(FOODS).map(id => ({ id, label: `${FOODS[id].name} · ${FOODS[id].state}` }));
 Page({
   data: { today: dateKey(), selectedDate: dateKey(), day: null, error: '', editor: null, foodOptions: options,
-    foodCategory: 'all', habit: {}, tasks: {}, habitError: '', swapModes: ['尽量保持蛋白质', '尽量保持热量', '手动填写克数', '尽量保持碳水（换主食）'] },
+    library: null, favoriteDraft: null, recipe: null, mealNames: ['早餐', '午餐', '加餐', '晚餐'], foodCategory: 'all', habit: {}, tasks: {}, habitError: '', swapModes: ['尽量保持蛋白质', '尽量保持热量', '手动填写克数', '尽量保持碳水（换主食）'] },
   onShow() {
     const next = dateKey();
     const selected = this.data.selectedDate === this.data.today ? next : this.data.selectedDate;
     this.loadDay(selected);
     this.loadHabits();
+    this.syncReminderCheckin();
+  },
+  syncReminderCheckin() {
+    reminders.syncCheckin().then(() => this.setData({ reminderSyncError: '' })).catch(() => this.setData({ reminderSyncError: '本机记录已保留，但提醒服务未同步成功，仍可能收到提醒。联网后重新打开本页可重试。' }));
   },
   loadHabits() {
     try { this.setData({ habit: statistics(readCheckins()), tasks: evidence(), habitError: '' }); }
@@ -20,7 +27,7 @@ Page({
   },
   goProgress() { wx.switchTab({ url: '/pages/progress/index' }); },
   completeCheckin() {
-    try { checkIn(this.data.today); this.loadHabits(); wx.showToast({ title: '今天的一小步，已记下', icon: 'none' }); }
+    try { checkIn(this.data.today); this.loadHabits(); this.syncReminderCheckin(); wx.showToast({ title: '今天的一小步，已记下', icon: 'none' }); }
     catch (error) { this.report(error); this.loadDay(dateKey()); this.loadHabits(); }
   },
   loadDay(selectedDate) {
@@ -33,6 +40,70 @@ Page({
   onDateChange(event) { this.loadDay(event.detail.value); },
   goPlan() { wx.switchTab({ url: '/pages/index/index' }); },
   goFoods() { wx.switchTab({ url: '/pages/foods/index' }); },
+  openLibrary(event) {
+    try {
+      this.checkRollover();
+      const mealIndex = Number(event.currentTarget.dataset.meal || 0);
+      const rows = readFavorites().map(row => ({ ...row, summary: row.foods.map(food => `${food.name} ${food.grams}${food.unit || 'g'}（${food.state}）`).join(' + ') }));
+      this.setData({ library: { mealIndex, rows }, editor: null });
+    } catch (error) { this.report(error); }
+  },
+  closeLibrary() { this.setData({ library: null }); },
+  onLibraryMeal(event) {
+    const mealIndex = Number(event.detail.value);
+    if (this.data.library && [0, 1, 2, 3].includes(mealIndex)) this.setData({ 'library.mealIndex': mealIndex });
+  },
+  useFavorite(event) {
+    try {
+      this.checkRollover(); if (!this.data.library) return;
+      const item = readFavorites().find(row => row.id === event.currentTarget.dataset.id);
+      if (!item) throw new Error('收藏已变化，请重新打开');
+      const day = this.data.day || createDiary(this.data.selectedDate);
+      this.persist(applyFavorite(day, this.data.library.mealIndex, item));
+      this.closeLibrary(); wx.showToast({ title: '已加入，吃完再记录', icon: 'none' });
+    } catch (error) { this.report(error); }
+  },
+  removeFavorite(event) {
+    try {
+      if (!this.data.library) return;
+      const meal = this.data.library.mealIndex;
+      deleteFavorite(event.currentTarget.dataset.id); this.openLibrary({ currentTarget: { dataset: { meal } } });
+    } catch (error) { this.report(error); }
+  },
+  collectFood(event) {
+    try {
+      const meal = this.data.day && this.data.day.meals[Number(event.currentTarget.dataset.meal)];
+      const food = meal && meal.foods[Number(event.currentTarget.dataset.food)];
+      if (!food) throw new Error('请选择有效食物');
+      saveFavorite(food.name.slice(0, 40), [food], 'food'); wx.showToast({ title: '已收藏这项食物', icon: 'none' });
+    } catch (error) { this.report(error); }
+  },
+  collectMeal(event) {
+    const meal = this.data.day && this.data.day.meals[Number(event.currentTarget.dataset.meal)];
+    if (!meal || !meal.foods.length) return this.report(new Error('先添加食物，再保存搭配'));
+    this.setData({ favoriteDraft: { name: `我的${meal.name}`, foods: JSON.parse(JSON.stringify(meal.foods)) } });
+  },
+  onFavoriteName(event) { if (this.data.favoriteDraft) this.setData({ 'favoriteDraft.name': event.detail.value }); },
+  closeFavoriteDraft() { this.setData({ favoriteDraft: null }); },
+  saveMealFavorite() {
+    try {
+      if (!this.data.favoriteDraft) return;
+      saveFavorite(this.data.favoriteDraft.name, this.data.favoriteDraft.foods, 'meal');
+      this.closeFavoriteDraft(); wx.showToast({ title: '已保存整餐搭配', icon: 'none' });
+    } catch (error) { this.report(error); }
+  },
+  showCooking(event) {
+    try {
+      const meal = this.data.day && this.data.day.meals[Number(event.currentTarget.dataset.meal)];
+      const food = meal && meal.foods[Number(event.currentTarget.dataset.food)];
+      const guide = cookingGuide(food); this.setData({ recipe: { ...guide, methodIndex: 0, active: guide.methods[0] || null } });
+    } catch (error) { this.report(error); }
+  },
+  onCookingMethod(event) {
+    const index = Number(event.currentTarget.dataset.index);
+    if (this.data.recipe && this.data.recipe.methods[index]) this.setData({ 'recipe.methodIndex': index, 'recipe.active': this.data.recipe.methods[index] });
+  },
+  closeCooking() { this.setData({ recipe: null }); },
   startDiary() {
     try { this.checkRollover(); if (!this.data.day) this.persist(createDiary(this.data.selectedDate)); }
     catch (error) { this.report(error); }
