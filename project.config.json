@@ -2,6 +2,8 @@
   "description": "BMI、估算体脂与饮食结构生成微信小程序",
   "packOptions": {
     "ignore": [
+      { "type": "folder", "value": "cloudfunctions" },
+      { "type": "folder", "value": "docs" },
       {
         "type": "folder",
         "value": "tests"
@@ -32,6 +34,7 @@
     }
   },
   "compileType": "miniprogram",
+  "cloudfunctionRoot": "cloudfunctions/",
   "libVersion": "3.5.7",
   "appid": "touristappid",
   "projectname": "health-diet-miniapp",

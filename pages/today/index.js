@@ -1,4 +1,5 @@
 const { FOODS, foodPortion } = require('../../utils/foods');
+const { STAPLE_IDS } = require('../../utils/staples');
 const { labelPortion } = require('../../utils/label-foods');
 const { createDiary, setLabelFood } = require('../../utils/tracker');
 const { readCheckins, evidence, checkIn, statistics } = require('../../utils/habits');
@@ -6,7 +7,7 @@ const { dateKey, validDate, previousDate, refreshDay, copyPlan, replaceFood, add
 const options = Object.keys(FOODS).map(id => ({ id, label: `${FOODS[id].name} · ${FOODS[id].state}` }));
 Page({
   data: { today: dateKey(), selectedDate: dateKey(), day: null, error: '', editor: null, foodOptions: options,
-    habit: {}, tasks: {}, habitError: '', swapModes: ['尽量保持蛋白质', '尽量保持热量', '手动填写克数'] },
+    foodCategory: 'all', habit: {}, tasks: {}, habitError: '', swapModes: ['尽量保持蛋白质', '尽量保持热量', '手动填写克数', '尽量保持碳水（换主食）'] },
   onShow() {
     const next = dateKey();
     const selected = this.data.selectedDate === this.data.today ? next : this.data.selectedDate;
@@ -72,6 +73,7 @@ Page({
       const original = adding ? null : meal.foods[foodIndex];
       if (!adding && !original) throw new Error('请选择有效食物');
       const optionIndex = original ? options.findIndex(item => item.id === original.id) : options.findIndex(item => item.id === 'rice');
+      this.setData({ foodCategory: 'all' });
       this.setData({ foodOptions: options, foodQuery: '', editor: { mealIndex, foodIndex, original, optionIndex: Math.max(0, optionIndex), custom: !!(original && original.basis), form: original && original.basis ? { ...original.basis, calories: original.basis.estimated ? '' : String(original.basis.calories) } : { name: '', state: '即食净重', protein: '', carbs: '', fat: '', calories: '', unit: 'g', energyUnit: 'kcal' }, modeIndex: 2, grams: original ? String(original.grams) : '100', preview: null, error: '' } });
       this.previewEditor(false);
     } catch (error) { this.report(error); }
@@ -80,9 +82,21 @@ Page({
   onFoodSearch(event) {
     if (!this.data.editor) return;
     const foodQuery = event.detail.value;
-    const foodOptions = options.filter(item => item.label.includes(foodQuery.trim()));
+    const foodOptions = options.filter(item => (this.data.foodCategory !== 'staples' || STAPLE_IDS.includes(item.id)) && item.label.includes(foodQuery.trim()));
     this.setData({ foodQuery, foodOptions, 'editor.optionIndex': 0, 'editor.modeIndex': 2 });
     this.previewEditor(false);
+  },
+  onFoodCategory(event) {
+    const foodCategory = event.currentTarget.dataset.category;
+    if (!['all', 'staples'].includes(foodCategory) || !this.data.editor) return;
+    this.setData({ foodCategory }); this.onFoodSearch({ detail: { value: '' } });
+  },
+  openStapleLabel(event) {
+    if (!this.data.editor) return;
+    const names = { mantou: '白面馒头', stickyCorn: '糯玉米', mixedGrain: '混合杂粮饭' };
+    const name = names[event.currentTarget.dataset.kind];
+    if (!name) return;
+    this.setData({ 'editor.custom': true, 'editor.modeIndex': 2, 'editor.form': { name, state: '按包装标注状态称重', protein: '', carbs: '', fat: '', calories: '', unit: 'g', energyUnit: 'kcal' } }); this.previewEditor(false);
   },
   setEntryMode(event) {
     if (!this.data.editor) return;
@@ -114,7 +128,7 @@ Page({
   },
   onSwapMode(event) {
     const modeIndex = Number(event.detail.value);
-    if (![0, 1, 2].includes(modeIndex) || !this.data.editor) return;
+    if (![0, 1, 2, 3].includes(modeIndex) || !this.data.editor) return;
     this.setData({ 'editor.modeIndex': modeIndex }); this.previewEditor(true);
   },
   onSwapGrams(event) {
@@ -131,7 +145,7 @@ Page({
       if (!this.data.foodOptions[editor.optionIndex]) throw new Error('未找到食物，可切换到按包装录入');
       const id = this.data.foodOptions[editor.optionIndex].id;
       let grams = editor.grams;
-      if (recalculate && editor.original && editor.modeIndex !== 2) grams = String(replacementGrams(editor.original, id, editor.modeIndex === 0 ? 'protein' : 'calories'));
+      if (recalculate && editor.original && editor.modeIndex !== 2) grams = String(replacementGrams(editor.original, id, editor.modeIndex === 0 ? 'protein' : editor.modeIndex === 3 ? 'carbs' : 'calories'));
       const preview = foodPortion(id, grams);
       this.setData({ 'editor.grams': grams, 'editor.preview': preview, 'editor.error': '' });
     } catch (error) { this.setData({ 'editor.preview': null, 'editor.error': error.message }); }

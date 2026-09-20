@@ -3,7 +3,8 @@
     "pages/today/index",
     "pages/index/index",
     "pages/foods/index",
-    "pages/progress/index"
+    "pages/progress/index",
+    "pages/account/index"
   ],
   "tabBar": {
     "color": "#718078",
@@ -14,7 +15,8 @@
       { "pagePath": "pages/today/index", "text": "今日" },
       { "pagePath": "pages/index/index", "text": "计划" },
       { "pagePath": "pages/foods/index", "text": "食物" },
-      { "pagePath": "pages/progress/index", "text": "打卡" }
+      { "pagePath": "pages/progress/index", "text": "打卡" },
+      { "pagePath": "pages/account/index", "text": "我的" }
     ]
   },
   "window": {

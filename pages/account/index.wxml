@@ -1,0 +1,10 @@
+<view class="screen">
+  <view class="eyebrow">YOUR OWN PACE</view><view class="title">我的</view>
+  <view class="panel"><view class="account-icon">轻</view><view class="heading">{{profile ? '微信身份已验证' : '欢迎使用轻体计划'}}</view><view class="muted space">免登录也能计算营养、记录饮食和打卡。</view>
+    <view wx:if="{{profile}}"><view class="muted space">账号编号：{{profile.accountId}}</view><button class="secondary space" bindtap="logout">退出本次登录</button></view>
+    <block wx:else><view wx:if="{{!ready}}" class="notice">账号服务暂未开放。当前功能可继续免登录使用。</view><checkbox-group bindchange="onConsent"><label class="consent"><checkbox value="account" checked="{{agreed}}" color="#268b5e" /><text>我已阅读下方账号说明，同意使用微信身份标识完成登录验证。</text></label></checkbox-group><button class="primary" loading="{{busy}}" disabled="{{!ready || !agreed || busy}}" bindtap="login">微信登录</button></block>
+    <view wx:if="{{message}}" class="muted space">{{message}}</view>
+  </view>
+  <view class="panel"><view class="heading">账号与记录说明</view><view class="muted space">登录用于验证微信身份，不要求手机号、昵称或头像。账号编号不作为数据访问凭证。</view><view class="muted space">本版本尚未启用云备份。登录不会上传或同步饮食、体重、打卡及自定义食物；这些记录仍属于本机，清除缓存或更换设备不会自动恢复。退出登录保留本机记录，共用设备上的其他使用者也可能看到这些记录。</view></view>
+  <button class="secondary" bindtap="goToday">回到今日，记录一餐</button>
+</view>

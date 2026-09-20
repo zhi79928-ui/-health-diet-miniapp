@@ -103,7 +103,7 @@ function toggleMeal(day, mealIndex) {
 }
 function replacementGrams(original, id, mode) {
   if (!original || !validNutrition(original) || !Object.prototype.hasOwnProperty.call(FOODS, id)) throw new Error('请选择有效食物');
-  if (!['protein', 'calories'].includes(mode)) throw new Error('请选择替换依据');
+  if (!['protein', 'calories', 'carbs'].includes(mode)) throw new Error('请选择替换依据');
   if (original[mode] <= 0 || FOODS[id][mode] <= 0) throw new Error('此食物不能按该营养等量替换，请改选热量或手动填克数');
   const grams = r1(original[mode] / FOODS[id][mode] * 100);
   foodPortion(id, grams); // 超出边界时不静默截断，也不声称等量。

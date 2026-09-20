@@ -1,7 +1,9 @@
 // 每 100 g 可食部；多数为 USDA SR Legacy 近似值。豆浆来源另见 docs/food-diary.md。
 // 生熟肉是独立条目，不是同一批肉烹调前后的精确换算。
 const { EXTRA_FOODS, EXTRA_OPTIONS } = require('./extra-meats');
+const { STAPLES } = require('./staples');
 const FOODS = {
+  ...STAPLES,
   soyMilk: { name: '无糖豆浆（通用参考）', state: '即饮净重', note: '浓度、品牌及过滤方式会影响营养；包装产品优先按标签录入。克数不等同毫升。参考：en.wikipedia.org/wiki/Soy_milk 的每 100 g 营养表', calories: 33, protein: 2.9, carbs: 1.7, fat: 1.6, sourceId: 'soy-milk-generic' },
   ...EXTRA_FOODS,
   chickenRaw: { name: '去皮去骨鸡胸肉', state: '生重', note: '烹调前去皮去骨称重；需充分做熟后食用', calories: 120, protein: 22.5, carbs: 0, fat: 2.6, sourceId: '171077' },

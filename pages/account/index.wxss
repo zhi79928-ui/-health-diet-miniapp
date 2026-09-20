@@ -1,0 +1,3 @@
+@import "../../styles/tracking.wxss";
+.account-icon { width: 100rpx; height: 100rpx; border-radius: 50%; background: #e4f2e6; color: #266044; font-size: 48rpx; text-align: center; line-height: 100rpx; margin-bottom: 24rpx; }
+.consent { display: flex; align-items: flex-start; margin: 28rpx 0; font-size: 25rpx; line-height: 1.7; }
