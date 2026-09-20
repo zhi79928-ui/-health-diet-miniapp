@@ -1,4 +1,5 @@
 const { FOODS, foodPortion, sumNutrition } = require('./foods');
+const { labelPortion, validLabelRow } = require('./label-foods');
 const KEYS = ['calories', 'protein', 'carbs', 'fat'];
 const r1 = n => Math.round((n + Number.EPSILON) * 10) / 10;
 const copy = value => JSON.parse(JSON.stringify(value));
@@ -19,11 +20,11 @@ function validNutrition(row) {
   return row && KEYS.every(key => Number.isFinite(row[key]) && row[key] >= 0);
 }
 function checkDay(day) {
-  if (!day || !validDate(day.date) || !validNutrition(day.target) || day.target.calories <= 0 || !Array.isArray(day.meals) || day.meals.length !== 4) throw new Error('饮食记录格式异常，无法安全读取');
+  if (!day || !validDate(day.date) || !validNutrition(day.target) || (day.target.calories <= 0 && day.diaryOnly !== true) || !Array.isArray(day.meals) || day.meals.length !== 4) throw new Error('饮食记录格式异常，无法安全读取');
   day.meals.forEach(meal => {
     if (!meal || typeof meal.name !== 'string' || typeof meal.logged !== 'boolean' || !Array.isArray(meal.foods) || meal.foods.length > 40) throw new Error('餐次记录格式异常');
     meal.foods.forEach(food => {
-      if (!validNutrition(food) || !Object.prototype.hasOwnProperty.call(FOODS, food.id) || !Number.isFinite(food.grams) || food.grams <= 0 || food.grams > 2000) throw new Error('食物记录格式异常');
+      if (!validNutrition(food) || !(Object.prototype.hasOwnProperty.call(FOODS, food.id) || validLabelRow(food)) || !Number.isFinite(food.grams) || food.grams <= 0 || food.grams > 2000) throw new Error('食物记录格式异常');
     });
   });
   return day;
@@ -51,7 +52,22 @@ function createDay(profile, date, oldDay) {
 }
 function copyPlan(day, date, currentDay) {
   checkDay(day);
+  if (day.diaryOnly) return refreshDay({ ...copy(day), date, meals: day.meals.map((meal, i) => currentDay && currentDay.meals[i].logged ? copy(currentDay.meals[i]) : { ...copy(meal), logged: false }), ...(currentDay ? { target: copy(currentDay.target), goal: currentDay.goal, diaryOnly: !!currentDay.diaryOnly } : {}) });
   return createDay({ targetCalories: day.target.calories, macros: { protein: day.target.protein, carbs: day.target.carbs, fat: day.target.fat }, goal: { label: day.goal }, meals: day.meals, warnings: day.warnings }, date, currentDay);
+}
+function createDiary(date) {
+  return refreshDay({ date, diaryOnly: true, target: { calories: 0, protein: 0, carbs: 0, fat: 0 }, goal: '我的饮食记录', warnings: [], meals: ['早餐', '午餐', '加餐', '晚餐'].map(name => ({ name, logged: false, foods: [] })) });
+}
+function setLabelFood(day, mealIndex, foodIndex, form, grams) {
+  const next = editableMeal(day, mealIndex), row = labelPortion(form, grams);
+  if (foodIndex === null) {
+    if (next.meals[mealIndex].foods.length >= 40) throw new Error('每餐最多 40 项食物');
+    next.meals[mealIndex].foods.push(row);
+  } else {
+    if (!Number.isInteger(foodIndex) || !next.meals[mealIndex].foods[foodIndex]) throw new Error('请选择有效食物');
+    next.meals[mealIndex].foods[foodIndex] = row;
+  }
+  return refreshDay(next);
 }
 function editableMeal(day, mealIndex) {
   checkDay(day);
@@ -128,4 +144,4 @@ function weightTrend(rows, today = dateKey()) {
     change: ordered.length > 1 ? r1(ordered[ordered.length - 1].kg - ordered[0].kg) : null,
     weekAverage: week.length ? r1(week.reduce((sum, row) => sum + row.kg, 0) / week.length) : null, weekCount: week.length };
 }
-module.exports = { dateKey, previousDate, validDate, refreshDay, createDay, copyPlan, replaceFood, addFood, removeFood, toggleMeal, replacementGrams, readDays, saveDay, weightEntry, readWeights, weightTrend };
+module.exports = { createDiary, setLabelFood, dateKey, previousDate, validDate, refreshDay, createDay, copyPlan, replaceFood, addFood, removeFood, toggleMeal, replacementGrams, readDays, saveDay, weightEntry, readWeights, weightTrend };

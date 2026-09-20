@@ -1,4 +1,6 @@
 const { FOODS, foodPortion } = require('../../utils/foods');
+const { labelPortion } = require('../../utils/label-foods');
+const { createDiary, setLabelFood } = require('../../utils/tracker');
 const { readCheckins, evidence, checkIn, statistics } = require('../../utils/habits');
 const { dateKey, validDate, previousDate, refreshDay, copyPlan, replaceFood, addFood, removeFood, toggleMeal, replacementGrams, readDays, saveDay } = require('../../utils/tracker');
 const options = Object.keys(FOODS).map(id => ({ id, label: `${FOODS[id].name} · ${FOODS[id].state}` }));
@@ -30,6 +32,10 @@ Page({
   onDateChange(event) { this.loadDay(event.detail.value); },
   goPlan() { wx.switchTab({ url: '/pages/index/index' }); },
   goFoods() { wx.switchTab({ url: '/pages/foods/index' }); },
+  startDiary() {
+    try { this.checkRollover(); if (!this.data.day) this.persist(createDiary(this.data.selectedDate)); }
+    catch (error) { this.report(error); }
+  },
   checkRollover() {
     if (this.data.selectedDate === this.data.today && this.data.today !== dateKey()) {
       this.loadDay(dateKey());
@@ -66,14 +72,43 @@ Page({
       const original = adding ? null : meal.foods[foodIndex];
       if (!adding && !original) throw new Error('请选择有效食物');
       const optionIndex = original ? options.findIndex(item => item.id === original.id) : options.findIndex(item => item.id === 'rice');
-      this.setData({ editor: { mealIndex, foodIndex, original, optionIndex, modeIndex: 2, grams: original ? String(original.grams) : '100', preview: null, error: '' } });
+      this.setData({ foodOptions: options, foodQuery: '', editor: { mealIndex, foodIndex, original, optionIndex: Math.max(0, optionIndex), custom: !!(original && original.basis), form: original && original.basis ? { ...original.basis, calories: original.basis.estimated ? '' : String(original.basis.calories) } : { name: '', state: '即食净重', protein: '', carbs: '', fat: '', calories: '', unit: 'g', energyUnit: 'kcal' }, modeIndex: 2, grams: original ? String(original.grams) : '100', preview: null, error: '' } });
       this.previewEditor(false);
     } catch (error) { this.report(error); }
   },
   closeEditor() { this.setData({ editor: null }); },
+  onFoodSearch(event) {
+    if (!this.data.editor) return;
+    const foodQuery = event.detail.value;
+    const foodOptions = options.filter(item => item.label.includes(foodQuery.trim()));
+    this.setData({ foodQuery, foodOptions, 'editor.optionIndex': 0, 'editor.modeIndex': 2 });
+    this.previewEditor(false);
+  },
+  setEntryMode(event) {
+    if (!this.data.editor) return;
+    this.setData({ 'editor.custom': event.currentTarget.dataset.mode === 'label', 'editor.modeIndex': 2 }); this.previewEditor(false);
+  },
+  onLabelField(event) {
+    const field = event.currentTarget.dataset.field;
+    if (!this.data.editor || !['name', 'state', 'protein', 'carbs', 'fat', 'calories'].includes(field)) return;
+    this.setData({ [`editor.form.${field}`]: event.detail.value }); this.previewEditor(false);
+  },
+  onLabelUnit(event) {
+    if (!this.data.editor) return;
+    const unit = event.currentTarget.dataset.unit;
+    if (!['g', 'mL'].includes(unit)) return;
+    if (unit !== this.data.editor.form.unit) this.setData({ 'editor.form.unit': unit, 'editor.grams': '' });
+    this.previewEditor(false);
+  },
+  onEnergyUnit(event) {
+    if (!this.data.editor) return;
+    const unit = event.currentTarget.dataset.unit;
+    if (!['kcal', 'kJ'].includes(unit)) return;
+    this.setData({ 'editor.form.energyUnit': unit }); this.previewEditor(false);
+  },
   onSwapFood(event) {
     const optionIndex = Number(event.detail.value);
-    if (!Number.isInteger(optionIndex) || !options[optionIndex] || !this.data.editor) return;
+    if (!Number.isInteger(optionIndex) || !this.data.foodOptions[optionIndex] || !this.data.editor) return;
     this.setData({ 'editor.optionIndex': optionIndex });
     this.previewEditor(true);
   },
@@ -90,7 +125,11 @@ Page({
     const editor = this.data.editor;
     if (!editor) return;
     try {
-      const id = options[editor.optionIndex].id;
+      if (editor.custom) {
+        this.setData({ 'editor.preview': labelPortion(editor.form, editor.grams), 'editor.error': '' }); return;
+      }
+      if (!this.data.foodOptions[editor.optionIndex]) throw new Error('未找到食物，可切换到按包装录入');
+      const id = this.data.foodOptions[editor.optionIndex].id;
       let grams = editor.grams;
       if (recalculate && editor.original && editor.modeIndex !== 2) grams = String(replacementGrams(editor.original, id, editor.modeIndex === 0 ? 'protein' : 'calories'));
       const preview = foodPortion(id, grams);
@@ -102,7 +141,8 @@ Page({
       this.checkRollover();
       const e = this.data.editor;
       if (!e || !e.preview || e.error) throw new Error('请先填写有效食物和克数');
-      const id = options[e.optionIndex].id;
+      if (e.custom) { this.persist(setLabelFood(this.data.day, e.mealIndex, e.foodIndex, e.form, e.grams)); return; }
+      const id = this.data.foodOptions[e.optionIndex].id;
       this.persist(e.original ? replaceFood(this.data.day, e.mealIndex, e.foodIndex, id, e.grams) : addFood(this.data.day, e.mealIndex, id, e.grams));
     } catch (error) { this.report(error); }
   },
