@@ -3,8 +3,10 @@ const { FOODS, foodPortion } = require('../utils/foods');
 const { STAPLE_IDS } = require('../utils/staples');
 const { createDiary, addFood, replacementGrams, dateKey, saveDay } = require('../utils/tracker');
 const { authenticate } = require('../cloudfunctions/accountLogin/handler');
+const { validateBackup } = require('../cloudfunctions/accountLogin/backup');
+const accountBackup = require('../utils/account-backup');
 let storage = {}, definition;
-global.wx = { getStorageSync: k => storage[k], setStorageSync: (k,v) => { storage[k]=JSON.parse(JSON.stringify(v)); }, showToast() {} };
+global.wx = { getStorageSync: k => storage[k], setStorageSync: (k,v) => { storage[k]=JSON.parse(JSON.stringify(v)); }, removeStorageSync: k => { delete storage[k]; }, showToast() {}, showModal() {} };
 global.Page = value => { definition=value; };
 function page(path) { delete require.cache[require.resolve(path)]; require(path); return { ...definition, data: JSON.parse(JSON.stringify(definition.data)), setData(patch) { for (const key in patch) { const parts=key.split('.'); let target=this.data; parts.slice(0,-1).forEach(k=>target=target[k]); target[parts[parts.length-1]]=patch[key]; } } }; }
 const tap = dataset => ({ currentTarget: { dataset } }), ev=value=>({detail:{value}});
@@ -25,15 +27,20 @@ assert.deepStrictEqual(authenticate({openId:'a',appId:'app'},''),{ok:false});
 assert.deepStrictEqual(authenticate({openId:'a',appId:'wrong'},'app'),{ok:false});
 assert.deepStrictEqual(authenticate({appId:'app'},'app'),{ok:false});
 const a=authenticate({openId:'a',appId:'app'},'app'), b=authenticate({openId:'b',appId:'app'},'app');assert.ok(a.ok);assert.notEqual(a.accountId,b.accountId);
+storage.weightHistoryV1=[{date:'2026-09-21',kg:77}];storage.favoriteMealsV1=[];
+const snapshot=accountBackup.collect();assert.equal(snapshot.version,1);assert.equal(snapshot.data.weightHistoryV1[0].kg,77);assert.deepStrictEqual(validateBackup(snapshot),snapshot);
+storage.weightHistoryV1=[{date:'2026-09-21',kg:80}];accountBackup.restore(snapshot);assert.equal(storage.weightHistoryV1[0].kg,77);
+assert.throws(()=>accountBackup.restore({version:1,data:{unknown:[]}}),/格式无效/);assert.throws(()=>validateBackup({version:1,data:{weightHistoryV1:{}}}),/格式无效/);
 async function run() {
  const config=require('../config/cloud'), account=require('../utils/account');
  assert.equal(account.available(),false);await assert.rejects(account.login(true),/暂未开放/);assert.equal(account.current(),null);
  config.envId='test-only';let calls=0;wx.cloud={callFunction:async()=>{calls++;return {result:a};}};
  await assert.rejects(account.login(false),/同意/);assert.equal(calls,0);
- const me=page('../pages/account/index');me.onShow();me.onConsent(ev(['account']));await me.login();assert.equal(me.data.profile.accountId,a.accountId);me.logout();assert.equal(account.current(),null);assert.ok(storage.nutritionDaysV1);
+ const me=page('../pages/account/index');me.onShow();me.onConsent(ev(['account']));await me.login();assert.equal(me.data.profile.accountId,a.accountId);assert.equal(storage.accountProfileV1.accountId,a.accountId);me.logout();assert.equal(account.current(),null);assert.equal(storage.accountProfileV1,undefined);assert.ok(storage.nutritionDaysV1);
  wx.cloud.callFunction=async()=>({result:{ok:false}});await assert.rejects(account.login(true),/验证失败/);assert.equal(account.current(),null);
  wx.cloud.callFunction=async()=>{throw new Error('offline');};await me.login();assert.equal(me.data.profile,null);assert.equal(me.data.busy,false);
  let resolve;wx.cloud.callFunction=()=>new Promise(r=>resolve=r);const pending=account.login(true);account.logout();resolve({result:a});await assert.rejects(pending,/取消/);assert.equal(account.current(),null);
+ wx.cloud.callFunction=async()=>({result:a});await account.login(true);wx.cloud.callFunction=async()=>({result:b});await assert.rejects(account.backupStatus(),/账号已变更/);assert.equal(account.current(),null);
  config.envId='';console.log('Staples and accounts: serving state, carb swaps, filters, label template, consent, identity isolation, failures and logout races passed');
 }
 run().catch(error=>{console.error(error);process.exitCode=1;});
