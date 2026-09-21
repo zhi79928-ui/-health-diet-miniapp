@@ -15,6 +15,7 @@ let storage={}, requests=0, calls=[];
 global.wx={getStorageSync:key=>storage[key],setStorageSync:(key,value)=>storage[key]=JSON.parse(JSON.stringify(value)),cloud:{callFunction:async({data})=>{calls.push(data);return {result:{ok:true,job}};}},requestSubscribeMessage(options){requests++;options.success({template:'accept'});}};
 const client=require('../utils/reminders'),config=require('../config/reminders'),cloudConfig=require('../config/cloud');
 async function run(){
+ config.enabled=false; // Explicitly test disabled behavior regardless of deployment configuration.
  assert.equal(client.ready(),false);client.saveTime('21:00');assert.equal(client.preference().time,'21:00');await assert.rejects(client.subscribe('21:00'),/暂未开通/);assert.equal(requests,0);
  config.enabled=true;config.templateId='template';cloudConfig.envId='test';await client.syncCheckin();assert.equal(calls.length,0);
  wx.requestSubscribeMessage=options=>{requests++;options.success({template:'reject'});};await assert.rejects(client.subscribe('21:00'),/未同意/);assert.equal(calls.length,0);
@@ -33,11 +34,11 @@ async function run(){
  const realNow=Date.now;Date.now=()=>now;process.env.EXPECTED_APP_ID='app';process.env.REMINDER_TEMPLATE_ID='template';process.env.REMINDER_DATA_JSON='{"thing1":"打卡提醒"}';
  try {
   await handler({action:'schedule',time:'20:30',templateId:'template',openid:'someone-else'});assert.ok(tables.habitReminderJobs.has(ownerId('user','app')));assert.ok(!tables.habitReminderJobs.has(ownerId('someone-else','app')));
-  await assert.rejects(handler({Type:'Timer',TriggerName:'habitReminderTimer'}),/无效定时/);
-  now=job.dueAt;context={};await Promise.all([handler({Type:'Timer',TriggerName:'habitReminderTimer'}),handler({Type:'Timer',TriggerName:'habitReminderTimer'})]);assert.equal(sends,1);
-  now=before;context={APPID:'app',OPENID:'user'};await handler({action:'schedule',time:'20:30',templateId:'template'});await handler({action:'checkin',date:'2026-09-20'});now=job.dueAt;context={};await handler({Type:'Timer',TriggerName:'habitReminderTimer'});assert.equal(sends,1);assert.equal(tables.habitReminderJobs.get(ownerId('user','app')).status,'skipped');
-  now=before;context={APPID:'app',OPENID:'other'};await handler({action:'schedule',time:'20:30',templateId:'template'});await handler({action:'cancel'});now=job.dueAt;context={};await handler({Type:'Timer',TriggerName:'habitReminderTimer'});assert.equal(sends,1);
-  now=before;context={APPID:'app',OPENID:'failure'};await handler({action:'schedule',time:'20:30',templateId:'template'});now=job.dueAt;context={};failSend=true;await handler({Type:'Timer',TriggerName:'habitReminderTimer'});await handler({Type:'Timer',TriggerName:'habitReminderTimer'});assert.equal(sends,2);assert.equal(tables.habitReminderJobs.get(ownerId('failure','app')).status,'failed');
+  await assert.rejects(handler({Type:'timer',TriggerName:'habitReminderTimer'}),/无效定时/);
+  now=job.dueAt;context={};await Promise.all([handler({Type:'timer',TriggerName:'habitReminderTimer'}),handler({Type:'timer',TriggerName:'habitReminderTimer'})]);assert.equal(sends,1);
+  now=before;context={APPID:'app',OPENID:'user'};await handler({action:'schedule',time:'20:30',templateId:'template'});await handler({action:'checkin',date:'2026-09-20'});now=job.dueAt;context={};await handler({Type:'timer',TriggerName:'habitReminderTimer'});assert.equal(sends,1);assert.equal(tables.habitReminderJobs.get(ownerId('user','app')).status,'skipped');
+  now=before;context={APPID:'app',OPENID:'other'};await handler({action:'schedule',time:'20:30',templateId:'template'});await handler({action:'cancel'});now=job.dueAt;context={};await handler({Type:'timer',TriggerName:'habitReminderTimer'});assert.equal(sends,1);
+  now=before;context={APPID:'app',OPENID:'failure'};await handler({action:'schedule',time:'20:30',templateId:'template'});now=job.dueAt;context={};failSend=true;await handler({Type:'timer',TriggerName:'habitReminderTimer'});await handler({Type:'timer',TriggerName:'habitReminderTimer'});assert.equal(sends,2);assert.equal(tables.habitReminderJobs.get(ownerId('failure','app')).status,'failed');
  } finally{Date.now=realNow;}
  console.log('Reminders: opt-in, disabled configuration, CST rollover, skip completed days, trusted identity, cancellation, concurrent claims and no duplicate retry passed');
 }
