@@ -38,8 +38,14 @@ async function dispatch(now) {
   return { ok: true, sent };
 }
 exports.main = async (event = {}) => {
+  console.log('[提醒触发诊断]', JSON.stringify({
+    Type: event.Type,
+    type: event.type,
+    TriggerName: event.TriggerName,
+    triggerName: event.triggerName
+  }));
   const context = cloud.getWXContext(), now = Date.now();
-  if (event.Type === 'Timer') {
+  if (event.Type === 'timer') {
     if (context.OPENID || event.TriggerName !== 'habitReminderTimer') throw new Error('无效定时调用');
     return dispatch(now);
   }
