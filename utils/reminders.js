@@ -38,7 +38,15 @@ function subscribe(time) {
         wx.setStorageSync(KEY, { time, subscribed: true }); resolve(result);
       }
       catch (error) { reject(error); }
-    }, fail: () => reject(new Error('订阅未完成，请检查微信设置后重试')) });
+    }, fail: error => {
+      const code = error && error.errCode !== undefined ? String(error.errCode) : '未知';
+      const detail = error && error.errMsg ? error.errMsg : '微信未返回错误描述';
+      const message = '微信订阅请求失败（' + code + '）：' + detail;
+      console.error('[habitReminder] requestSubscribeMessage failed', { errCode: code, errMsg: detail });
+      reject(new Error(message));
+      // 独立弹窗保留原始原因，避免后续云端状态刷新覆盖页面提示。
+      wx.showModal({ title: '订阅失败详情', content: message, showCancel: false });
+    } });
   });
 }
 async function cancel() {
