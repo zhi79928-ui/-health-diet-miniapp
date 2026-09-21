@@ -20,9 +20,9 @@
 ### 部署所需
 
 1. 完成 `docs/account-setup.md` 的真实 AppID 和云环境配置。
-2. 在微信小程序后台订阅消息中选择符合业务类目的模板，取得模板 ID 和字段 key。把模板 ID 写入 `config/reminders.js`。
+2. 已选用“活动开始提醒”一次性订阅模板。模板 ID 已写入 `config/reminders.js`，字段依次为活动名称 `thing1`、开始时间 `date2`、提醒时间 `time7`、活动内容 `thing8`、温馨提示 `thing5`。
 3. 创建数据库集合 `habitReminderJobs`、`habitReminderChecks`，两者客户端读写都禁止，只有云函数服务端访问；自定义规则为 `{"read": false, "write": false}`。不要使用“所有用户可读写”。
-4. 部署 `cloudfunctions/habitReminder`（云端安装依赖），配置 `EXPECTED_APP_ID`、`REMINDER_TEMPLATE_ID`、`REMINDER_DATA_JSON`。模板 ID 必须与前端一致。数据 JSON 的 key 必须和实际获准模板一致，例如仅当该模板确实有这两个字段时才使用 `{"thing1":"记下今天的一小步","time2":"{time}"}`。支持 `{date}`、`{time}` 替换，文案需符合字段限制。
+4. 部署 `cloudfunctions/habitReminder`（云端安装依赖），配置 `EXPECTED_APP_ID`、`REMINDER_TEMPLATE_ID`、`REMINDER_DATA_JSON`。模板 ID 必须与前端一致。当前模板的数据配置为 `{"thing1":"每日饮食打卡","date2":"{date}","time7":"{time}","thing8":"记录今日饮食与习惯","thing5":"坚持记录，慢慢变好"}`；支持 `{date}`、`{time}` 替换，文案需符合字段限制。
 5. 确认配置里的 `subscribeMessage.send` 权限和 `habitReminderTimer` 定时触发器已部署；Cron `0 * * * * * *` 每分钟检查一次。每次处理最多 100 个到期任务，小规模验证后再评估容量和云资源用量。不开 HTTP 公网入口，定时器只能由平台触发。
 6. 真机测试时按平台要求设置 `MINIPROGRAM_STATE`（体验版 `trial`、正式版 `formal`）；必须先验证消息跳转、模板合法性、真实接收与取消行为。
 7. 验收通过后将 `config/reminders.js` 的 `enabled` 改为 true，再上传体验版。
