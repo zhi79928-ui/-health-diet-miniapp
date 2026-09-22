@@ -153,13 +153,13 @@ Page({
   onFoodSearch(event) {
     if (!this.data.editor) return;
     const foodQuery = event.detail.value;
-    const foodOptions = options.filter(item => (this.data.foodCategory !== 'staples' || STAPLE_IDS.includes(item.id)) && item.label.includes(foodQuery.trim()));
+    const foodOptions = options.filter(item => (this.data.foodCategory === 'all' || (this.data.foodCategory === 'staples' ? STAPLE_IDS.includes(item.id) : FOODS[item.id].category === this.data.foodCategory)) && (item.label + ' ' + (FOODS[item.id].aliases || '')).includes(foodQuery.trim()));
     this.setData({ foodQuery, foodOptions, 'editor.optionIndex': 0, 'editor.modeIndex': 2 });
     this.previewEditor(false);
   },
   onFoodCategory(event) {
     const foodCategory = event.currentTarget.dataset.category;
-    if (!['all', 'staples'].includes(foodCategory) || !this.data.editor) return;
+    if (!['all', 'staples', 'vegetables', 'fruits'].includes(foodCategory) || !this.data.editor) return;
     this.setData({ foodCategory }); this.onFoodSearch({ detail: { value: '' } });
   },
   openStapleLabel(event) {
@@ -213,7 +213,7 @@ Page({
       if (editor.custom) {
         this.setData({ 'editor.preview': labelPortion(editor.form, editor.grams), 'editor.error': '' }); return;
       }
-      if (!this.data.foodOptions[editor.optionIndex]) throw new Error('未找到食物，可切换到按包装录入');
+      if (!this.data.foodOptions[editor.optionIndex]) throw new Error('暂无匹配食物，请换个名称或分类搜索');
       const id = this.data.foodOptions[editor.optionIndex].id;
       let grams = editor.grams;
       if (recalculate && editor.original && editor.modeIndex !== 2) grams = String(replacementGrams(editor.original, id, editor.modeIndex === 0 ? 'protein' : editor.modeIndex === 3 ? 'carbs' : 'calories'));

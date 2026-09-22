@@ -4,6 +4,6 @@
   "private": true,
   "description": "BMI、估算体脂与饮食结构生成微信小程序",
   "scripts": {
-    "test": "node tests/health.test.js && node tests/foods.test.js && node tests/custom-meats.test.js && node tests/tracker.test.js && node tests/page.test.js && node tests/habits.test.js && node tests/diary.test.js && node tests/staples-account.test.js && node tests/convenience.test.js && node tests/reminders.test.js"
+    "test": "node tests/health.test.js && node tests/foods.test.js && node tests/custom-meats.test.js && node tests/tracker.test.js && node tests/page.test.js && node tests/habits.test.js && node tests/diary.test.js && node tests/staples-account.test.js && node tests/convenience.test.js && node tests/reminders.test.js && node tests/produce-fiber.test.js"
   }
 }

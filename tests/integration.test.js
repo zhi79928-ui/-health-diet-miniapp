@@ -68,18 +68,13 @@ for (let i = 0; i < foods.data.presetMeatCount; i++) {
     if (row) { foods.copyFoodSource(tap({ id: row.id })); assert.ok(clipboard.includes(row.sourceId)); }
   }
 }
-foods.onMeatSearch(ev('鸭胸')); assert.strictEqual(foods.data.meatOptions.length, 1); assert.strictEqual(foods.data.meatResult, null);
-const custom = (field, value) => foods.onCustomMeatInput({ ...tap({ field }), detail: { value } });
-custom('rawProtein', '20'); custom('rawCalories', '418.4'); foods.onEnergyUnitChange(ev('1')); foods.onMeatInput(ev('200'));
-assert.strictEqual(foods.data.meatResult.raw.protein, 40); assert.strictEqual(foods.data.meatResult.raw.calories, 200); assert.strictEqual(foods.data.meatResult.cooked, null);
-foods.saveCustomMeat(); assert.strictEqual(storage.customMeatsV1.length, 1);
+foods.onMeatSearch(ev('鸭胸')); assert.strictEqual(foods.data.meatOptions.length, 0); assert.strictEqual(foods.data.meatResult, null);
+foods.onMeatSearch(ev('鸡腿')); assert.ok(foods.data.meatResult);
+assert.ok(!foods.data.meatOptions.some(item => item.id === 'custom'));
+// Historical custom references stay readable, with no new packaging form.
+storage.customMeatsV1 = [{ id: 'custom-duck', form: { name: '鸭胸', rawProtein: '20', rawCalories: '100', cookedProtein: '', cookedCalories: '', cookedLabel: '', source: '', energyUnit: 'kcal' } }];
 const foodReload = page('../pages/foods/index'); foodReload.onLoad(); foodReload.onMeatSearch(ev('鸭胸'));
 assert.strictEqual(foodReload.data.meatResult.raw.protein, 20);
-custom('rawProtein', ''); assert.strictEqual(foods.data.meatResult, null); foods.saveCustomMeat(); assert.strictEqual(storage.customMeatsV1[0].form.rawProtein, '20');
-custom('rawProtein', '21'); failWrite = true; foods.saveCustomMeat(); failWrite = false;
-assert.strictEqual(storage.customMeatsV1[0].form.rawProtein, '20');
-foods.saveCustomMeat(); assert.strictEqual(storage.customMeatsV1.length, 1); assert.strictEqual(storage.customMeatsV1[0].form.rawProtein, '21');
-foods.deleteCustomMeat(); assert.strictEqual(storage.customMeatsV1.length, 0);
 const progress = page('../pages/progress/index'); progress.onShow(); progress.onWeightInput(ev('77')); progress.onUnitChange(ev('1'));
 assert.strictEqual(progress.data.weight, '154'); progress.saveWeight(); assert.strictEqual(storage.weightHistoryV1[0].kg, 77);
 progress.onWeightInput(ev('152')); progress.saveWeight(); assert.strictEqual(storage.weightHistoryV1.length, 1); assert.strictEqual(progress.data.trend.latest, 76);

@@ -3,35 +3,12 @@
   <view class="card meat-card">
     <view class="eyebrow">MEAT PROTEIN</view>
     <view class="section-title small">肉类蛋白质速查</view>
-    <view class="weight-guide">{{presetMeatCount}} 种常见肉类 / 部位，可搜索；没有的肉类可按包装自定义并保存。</view>
+    <view class="weight-guide">{{presetMeatCount}} 种常见肉类 / 部位，可搜索；按生重或熟重输入克数。</view>
     <view class="input-wrap"><input value="{{meatQuery}}" bindinput="onMeatSearch" placeholder="搜索肉类，例如 鸡腿、羊肉、虾" aria-label="搜索肉类" maxlength="40" /></view>
     <view class="field-label meat-label">选择肉类</view>
-    <picker mode="selector" range="{{meatOptions}}" range-key="label" value="{{meatIndex}}" bindchange="onMeatChange" aria-label="选择肉类及部位">
-      <view class="meat-picker"><text>{{meatOptions[meatIndex].label}}</text><text class="meat-arrow">更换 ▾</text></view>
+    <picker mode="selector" disabled="{{!meatOptions.length}}" range="{{meatOptions}}" range-key="label" value="{{meatIndex}}" bindchange="onMeatChange" aria-label="选择肉类及部位">
+      <view class="meat-picker"><text>{{meatOptions.length ? meatOptions[meatIndex].label : '暂无匹配食物'}}</text><text class="meat-arrow">更换 ▾</text></view>
     </picker>
-    <view wx:if="{{meatOptions.length === 1}}" class="weight-guide">没有找到已收录条目，可以在下面录入这款肉类的营养数据。</view>
-    <view wx:if="{{meatIsCustom}}" class="custom-meat-form">
-      <view class="field-label">肉类名称 / 部位 / 品牌</view>
-      <view class="input-wrap"><input value="{{customForm.name}}" data-field="name" bindinput="onCustomMeatInput" placeholder="例如 去皮鸭胸肉 / 某品牌牛肉卷" maxlength="40" aria-label="自定义肉类名称" /></view>
-      <view class="weight-guide">按每 100 g 可食部填写。至少填写一种状态的蛋白质；没有的数据留空。生重和熟重请分别查表或核对包装，不自动换算。</view>
-      <view class="custom-grid">
-        <view><view class="field-label">生重蛋白质（g / 100 g）</view><view class="input-wrap"><input type="digit" value="{{customForm.rawProtein}}" data-field="rawProtein" bindinput="onCustomMeatInput" placeholder="按标签填写" aria-label="生重每100克蛋白质" /></view></view>
-        <view><view class="field-label">熟重蛋白质（g / 100 g）</view><view class="input-wrap"><input type="digit" value="{{customForm.cookedProtein}}" data-field="cookedProtein" bindinput="onCustomMeatInput" placeholder="没有则留空" aria-label="熟重每100克蛋白质" /></view></view>
-      </view>
-      <view class="field-label meat-label">包装热量单位（输入值按此单位解释）</view>
-      <picker mode="selector" range="{{energyUnits}}" value="{{customForm.energyUnit === 'kJ' ? 1 : 0}}" bindchange="onEnergyUnitChange" aria-label="热量单位">
-        <view class="meat-picker"><text>{{customForm.energyUnit === 'kJ' ? 'kJ 千焦' : 'kcal 千卡'}}</text><text class="meat-arrow">更换 ▾</text></view>
-      </picker>
-      <view class="custom-grid">
-        <view><view class="field-label">生重热量（{{customForm.energyUnit}} / 100 g）</view><view class="input-wrap"><input type="digit" value="{{customForm.rawCalories}}" data-field="rawCalories" bindinput="onCustomMeatInput" placeholder="选填" aria-label="生重每100克热量" /></view></view>
-        <view><view class="field-label">熟重热量（{{customForm.energyUnit}} / 100 g）</view><view class="input-wrap"><input type="digit" value="{{customForm.cookedCalories}}" data-field="cookedCalories" bindinput="onCustomMeatInput" placeholder="选填" aria-label="熟重每100克热量" /></view></view>
-      </view>
-      <view class="field-label meat-label">熟重做法（选填）</view>
-      <view class="input-wrap"><input value="{{customForm.cookedLabel}}" data-field="cookedLabel" bindinput="onCustomMeatInput" placeholder="例如 水煮去皮、烤熟、即食" maxlength="30" aria-label="熟重烹调做法" /></view>
-      <view class="field-label meat-label">数据来源（选填）</view>
-      <view class="input-wrap"><input value="{{customForm.source}}" data-field="source" bindinput="onCustomMeatInput" placeholder="例如 品牌包装营养标签" maxlength="120" aria-label="自定义数据来源" /></view>
-      <view class="source-actions custom-actions"><button size="mini" bindtap="saveCustomMeat">{{meatOptions[meatIndex].id === 'custom' ? '保存为常用肉类' : '保存修改'}}</button><button wx:if="{{meatOptions[meatIndex].id !== 'custom'}}" size="mini" bindtap="deleteCustomMeat">删除此条目</button></view>
-    </view>
     <view wx:if="{{meatSaveMessage}}" class="weight-guide">{{meatSaveMessage}}</view>
     <view class="weight-guide">每 100 g 可食部参考。生重和熟重分别称取，不代表同一块肉做熟前后。</view>
     <view wx:if="{{meatBasis}}" class="reference-pair">
@@ -46,7 +23,7 @@
       <view wx:if="{{meatResult.raw}}">若为 {{meatResult.raw.grams}} g 生重：约 <text class="food-grams">{{meatResult.raw.protein}} g 蛋白质</text><text wx:if="{{meatResult.raw.calories !== null}}">，{{meatResult.raw.calories}} kcal</text></view>
       <view wx:if="{{meatResult.cooked}}">若为 {{meatResult.cooked.grams}} g 熟重（{{selectedCookedLabel}}）：约 <text class="food-grams">{{meatResult.cooked.protein}} g 蛋白质</text><text wx:if="{{meatResult.cooked.calories !== null}}">，{{meatResult.cooked.calories}} kcal</text></view>
     </view>
-    <view class="weight-guide">熟肉每 100 g 的蛋白质通常更集中，主要因为烹调失水，并不是凭空增加蛋白质。部位、肥瘦和做法会影响数值；有包装时优先采用营养标签。</view>
+    <view class="weight-guide">熟肉每 100 g 的蛋白质通常更集中，主要因为烹调失水，并不是凭空增加蛋白质。部位、肥瘦和做法会影响数值。</view>
     <view class="weight-guide">计算方式：食物克数 ÷ 100 × 对应状态的每 100 g 营养值。若要知道同一批肉的生熟重量关系，请分别称量烹调前后总重；本工具不使用固定缩水比例。</view>
     <view wx:if="{{meatBasis}}">
       <view wx:if="{{!meatIsCustom}}" class="source-actions"><button wx:if="{{meatBasis.raw}}" size="mini" data-id="{{meatBasis.raw.id}}" bindtap="copyFoodSource">复制生重来源</button><button wx:if="{{meatBasis.cooked}}" size="mini" data-id="{{meatBasis.cooked.id}}" bindtap="copyFoodSource">复制熟重来源</button></view>
@@ -61,7 +38,7 @@
     <view wx:if="{{showFoods}}" class="food-reference-list">
       <view wx:for="{{foodReferences}}" wx:key="id" class="food-row">
         <view class="food-title">{{item.name}} <text class="weight-badge">{{item.state}}</text></view>
-        <view class="food-nutrients">{{item.calories}} kcal · 蛋白 {{item.protein}} g · 碳水 {{item.carbs}} g · 脂肪 {{item.fat}} g</view>
+        <view class="food-nutrients">{{item.calories}} kcal · 蛋白 {{item.protein}} g · 碳水 {{item.carbs}} g · 脂肪 {{item.fat}} g</view><view class="food-nutrients">膳食纤维：{{item.fiberLabel}}</view>
         <view class="food-note">{{item.note}}</view>
         <button size="mini" class="source-link" data-id="{{item.id}}" bindtap="copyFoodSource">复制数据来源</button>
       </view>

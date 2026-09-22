@@ -1,4 +1,4 @@
-const { FOODS, foodPortion, sumNutrition } = require('./foods');
+const { FOODS, foodPortion, sumNutrition, withFiber } = require('./foods');
 const { labelPortion, validLabelRow } = require('./label-foods');
 const { cookingGuide } = require('./cooking');
 const KEYS = ['calories', 'protein', 'carbs', 'fat'];
@@ -33,7 +33,7 @@ function checkDay(day) {
 function refreshDay(day) {
   checkDay(day);
   const result = copy(day);
-  result.meals = result.meals.map((meal, mealIndex) => ({ ...meal, foods: meal.foods.map((food, i) => ({ ...food, rowKey: `${mealIndex}-${i}`, cookingLabel: cookingGuide(food).methods.map(method => method.label).join(' / ') || '按包装说明' })), ...sumNutrition(meal.foods) }));
+  result.meals = result.meals.map((meal, mealIndex) => ({ ...meal, foods: meal.foods.map((food, i) => ({ ...withFiber(food), rowKey: `${mealIndex}-${i}`, cookingLabel: cookingGuide(food).methods.map(method => method.label).join(' / ') || '查看称重说明' })), ...sumNutrition(meal.foods) }));
   result.planned = sumNutrition(result.meals);
   result.consumed = sumNutrition(result.meals.filter(meal => meal.logged));
   result.completed = result.meals.filter(meal => meal.logged).length;

@@ -26,7 +26,7 @@ function cookingGuide(food) {
   else if (id === 'sweetPotatoBaked') keys = ['bake'];
   else if (['rice', 'brownRice', 'milletDry', 'milletCooked', 'quinoaCooked', 'buckwheatCooked'].includes(id)) keys = ['rice'];
   else if (id === 'oats') keys = ['oats'];
-  else if (id === 'broccoli') keys = ['steam', 'boil'];
+  else if (FOODS[id] && FOODS[id].category === 'vegetables') keys = /熟重/.test(food.state) ? ['boil'] : ['steam', 'boil'];
   // 熟肉的营养条目绑定做法；只展示该做法，避免“煮熟”套用“烤熟”数值。
   if (FOODS[id] && /熟/.test(food.state) && (poultry || fish || red)) {
     if (id === 'wingCooked' || id === 'lambCooked') keys = ['braise'];

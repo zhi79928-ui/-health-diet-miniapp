@@ -1,8 +1,8 @@
-const { FOODS, MEAT_OPTIONS, meatReference } = require('../../utils/foods');
+const { FOODS, MEAT_OPTIONS, meatReference, foodPortion } = require('../../utils/foods');
 const { emptyForm, validateForm, readSavedMeats, lookupOptions, lookupReference } = require('../../utils/custom-meats');
 Page({
   data: {
-    meatOptions: lookupOptions([]),
+    meatOptions: lookupOptions([]).filter(item => item.id !== 'custom'),
     presetMeatCount: MEAT_OPTIONS.length,
     meatQuery: '',
     savedMeats: [],
@@ -16,13 +16,13 @@ Page({
     meatBasis: meatReference('chicken', 100),
     meatResult: meatReference('chicken', 100),
     meatError: '',
-    foodReferences: Object.keys(FOODS).map(id => ({ id, ...FOODS[id] })),
+    foodReferences: Object.keys(FOODS).map(id => foodPortion(id, 100)),
     showFoods: false,
   },
   onLoad() {
     try {
       const savedMeats = readSavedMeats(wx.getStorageSync('customMeatsV1'));
-      this.setData({ savedMeats, meatOptions: lookupOptions(savedMeats) });
+      this.setData({ savedMeats, meatOptions: lookupOptions(savedMeats).filter(item => item.id !== 'custom') });
     } catch (_) { this.setData({ meatSaveMessage: '无法读取自定义肉类，请保留本地数据并重试。' }); }
   },
   onMeatChange(event) {
@@ -36,11 +36,11 @@ Page({
 
   onMeatSearch(event) {
     const meatQuery = event.detail.value;
-    const previousId = this.data.meatOptions[this.data.meatIndex].id;
-    const meatOptions = lookupOptions(this.data.savedMeats, meatQuery);
+    const previousId = (this.data.meatOptions[this.data.meatIndex] || {}).id;
+    const meatOptions = lookupOptions(this.data.savedMeats, meatQuery).filter(item => item.id !== 'custom');
     const meatIndex = Math.max(0, meatOptions.findIndex(item => item.id === previousId));
     this.setData({ meatQuery, meatOptions });
-    if (meatOptions[meatIndex].id !== previousId) {
+    if (meatOptions[meatIndex] && meatOptions[meatIndex].id !== previousId) {
       const selected = meatOptions[meatIndex];
       if (selected.custom) this.setData({ customForm: { ...(selected.form || { ...emptyForm(), name: String(meatQuery).trim().slice(0, 40) }) } });
     }
@@ -70,7 +70,7 @@ Page({
       const id = selected.id === 'custom' ? `custom-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 8)}` : selected.id;
       const savedMeats = this.data.savedMeats.filter(entry => entry.id !== id).concat({ id, form });
       wx.setStorageSync('customMeatsV1', savedMeats);
-      const meatOptions = lookupOptions(savedMeats);
+      const meatOptions = lookupOptions(savedMeats).filter(item => item.id !== 'custom');
       const meatIndex = meatOptions.findIndex(item => item.id === id);
       this.setData({ savedMeats, meatOptions, meatQuery: '', customForm: form, meatSaveMessage: '已保存在本机，下次可直接选择。' });
       this.updateMeatLookup(meatIndex, this.data.meatGrams);
@@ -85,7 +85,7 @@ Page({
     const savedMeats = this.data.savedMeats.filter(entry => entry.id !== selected.id);
     try {
       wx.setStorageSync('customMeatsV1', savedMeats);
-      this.setData({ savedMeats, meatOptions: lookupOptions(savedMeats), meatQuery: '', customForm: emptyForm(), meatSaveMessage: '已删除这项自定义肉类。' });
+      this.setData({ savedMeats, meatOptions: lookupOptions(savedMeats).filter(item => item.id !== 'custom'), meatQuery: '', customForm: emptyForm(), meatSaveMessage: '已删除这项自定义肉类。' });
       this.updateMeatLookup(0, this.data.meatGrams);
     } catch (_) {
       this.setData({ meatSaveMessage: '删除失败，请稍后重试。' });
@@ -98,6 +98,7 @@ Page({
 
   updateMeatLookup(meatIndex, meatGrams) {
     const selected = this.data.meatOptions[meatIndex];
+    if (!selected) { this.setData({ meatIndex: 0, meatGrams, meatBasis: null, meatResult: null, meatIsCustom: false, meatError: '暂无匹配食物，请换个名称搜索' }); return; }
     const form = this.data.customForm;
     const patch = { meatIndex, meatGrams, meatIsCustom: !!selected.custom, meatBasis: null,
       selectedCookedLabel: selected.custom ? (form.cookedLabel || '按录入做法') : selected.cookedLabel };
@@ -115,7 +116,7 @@ Page({
 
   copyFoodSource(event) {
     const food = FOODS[event.currentTarget.dataset.id];
-    if (food) wx.setClipboardData({ data: `https://fdc.nal.usda.gov/food-details/${food.sourceId}/nutrients` });
+    if (food) wx.setClipboardData({ data: food.sourceUrl || `https://fdc.nal.usda.gov/food-details/${food.sourceId}/nutrients` });
   },
 
 });

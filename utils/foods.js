@@ -2,16 +2,18 @@
 // 生熟肉是独立条目，不是同一批肉烹调前后的精确换算。
 const { EXTRA_FOODS, EXTRA_OPTIONS } = require('./extra-meats');
 const { STAPLES } = require('./staples');
+const { PRODUCE } = require('./produce');
 const FOODS = {
+  ...PRODUCE,
   ...STAPLES,
-  soyMilk: { name: '无糖豆浆（通用参考）', state: '即饮净重', note: '浓度、品牌及过滤方式会影响营养；包装产品优先按标签录入。克数不等同毫升。参考：en.wikipedia.org/wiki/Soy_milk 的每 100 g 营养表', calories: 33, protein: 2.9, carbs: 1.7, fat: 1.6, sourceId: 'soy-milk-generic' },
+  soyMilk: { name: '无糖豆浆（通用参考）', state: '即饮净重', note: '浓度、品牌及过滤方式会影响营养；此条目为通用估算。克数不等同毫升。参考：en.wikipedia.org/wiki/Soy_milk 的每 100 g 营养表', calories: 33, protein: 2.9, carbs: 1.7, fat: 1.6, sourceId: 'soy-milk-generic' },
   ...EXTRA_FOODS,
   chickenRaw: { name: '去皮去骨鸡胸肉', state: '生重', note: '烹调前去皮去骨称重；需充分做熟后食用', calories: 120, protein: 22.5, carbs: 0, fat: 2.6, sourceId: '171077' },
   chickenCooked: { name: '烤鸡胸肉（纯肉）', state: '熟重', note: '烤熟后去皮去骨称重；额外用油另计，不通用于水煮、油炸或腌制品', calories: 165, protein: 31, carbs: 0, fat: 3.6, sourceId: '171477' },
   beefRaw: { name: '牛眼肉（去骨瘦肉）', state: '生重', note: 'USDA Select 级眼肉，去骨、去可分离脂肪；不代表肥牛、牛腩或所有牛肉', calories: 142, protein: 22.5, carbs: 0, fat: 5.8, sourceId: '173382' },
   beefCooked: { name: '烤牛眼肉（去骨瘦肉）', state: '熟重', note: 'USDA Select 级眼肉瘦肉，烤熟后称重；额外用油另计，不通用于炖牛腩', calories: 191, protein: 29.2, carbs: 0, fat: 8.4, sourceId: '173381' },
   porkRaw: { name: '猪绞肉', state: '生重', note: '普通新鲜猪绞肉，包含脂肪；不同肥瘦比例差异较大，不代表纯瘦肉或五花肉', calories: 263, protein: 16.9, carbs: 0, fat: 21.2, sourceId: '167902' },
-  porkCooked: { name: '熟猪绞肉', state: '熟重', note: '数据库普通熟猪绞肉条目，未细分烹调方法；肥瘦比例不同请优先用包装标签', calories: 297, protein: 25.7, carbs: 0, fat: 20.8, sourceId: '167903' },
+  porkCooked: { name: '熟猪绞肉', state: '熟重', note: '数据库普通熟猪绞肉条目，未细分烹调方法；肥瘦比例不同会影响估算', calories: 297, protein: 25.7, carbs: 0, fat: 20.8, sourceId: '167903' },
   codRaw: { name: '大西洋鳕鱼', state: '生重', note: '烹调前可食鱼肉净重，不含骨；不代表银鳕鱼或其他鱼种', calories: 82, protein: 17.8, carbs: 0, fat: 0.7, sourceId: '171955' },
   codCooked: { name: '干热烹调大西洋鳕鱼', state: '熟重', note: '烘烤等干热烹调后的鱼肉净重；额外用油另计，不通用于油炸或裹粉鱼排', calories: 105, protein: 22.8, carbs: 0, fat: 0.9, sourceId: '171956' },
   rice: { name: '白米饭', state: '熟重', note: '煮熟后称重，不是干大米', calories: 130, protein: 2.7, carbs: 28.2, fat: 0.3, sourceId: '168878' },
@@ -31,6 +33,29 @@ const MEAT_OPTIONS = [
 const NUTRIENTS = ['calories', 'protein', 'carbs', 'fat'];
 const round1 = n => Math.round((n + Number.EPSILON) * 10) / 10;
 
+// USDA 官方 FDC 条目，2026-09-22 核对纤维；缺失值不补成零。
+const fiberBySource = {
+  170440: 1.8, 168484: 2.5, 168483: 3.3, 169999: 2.4, 168875: 1.8,
+  169702: 8.5, 168871: 1.3, 168917: 2.8, 170686: 2.7, 168878: 0.4,
+  169705: 10.6, 170379: 2.6, 171688: 2.4, 170567: 12.5,
+  173627: 0, 172388: 0, 173625: 0, 173612: 0, 172393: 0, 171496: 0,
+  167904: 0, 167895: 0, 167897: 0, 174330: 0, 174331: 0, 175167: 0,
+  175168: 0, 173706: 0, 173707: 0, 175176: 0, 175177: 0, 171077: 0,
+  171477: 0, 173382: 0, 173381: 0, 167902: 0, 167903: 0, 171955: 0,
+  171956: 0, 171265: 0, 171413: 0
+};
+Object.values(FOODS).forEach(food => {
+  if (Object.prototype.hasOwnProperty.call(fiberBySource, food.sourceId)) food.fiber = fiberBySource[food.sourceId];
+});
+FOODS.apple.category = 'fruits';
+FOODS.broccoli.category = 'vegetables';
+function withFiber(row) {
+  const basis = FOODS[row.id];
+  const fiber = Number.isFinite(row.fiber) && row.fiber >= 0 ? row.fiber :
+    (!row.basis && basis && Number.isFinite(basis.fiber) && Number.isFinite(row.grams) ? round1(basis.fiber * row.grams / 100) : null);
+  return { ...row, fiber, fiberLabel: fiber === null ? '暂无数据' : fiber + ' g' };
+}
+
 function foodPortion(id, grams) {
   if (!Object.prototype.hasOwnProperty.call(FOODS, id)) throw new Error('请选择有效食物');
   const weight = Number(grams);
@@ -40,7 +65,7 @@ function foodPortion(id, grams) {
   const food = FOODS[id];
   const result = { ...food, id, grams: weight };
   NUTRIENTS.forEach(key => { result[key] = round1(food[key] * weight / 100); });
-  return result;
+  return withFiber({ ...result, fiber: Number.isFinite(food.fiber) ? round1(food.fiber * weight / 100) : null });
 }
 
 // 汇总已显示的分项，避免用户把页面上的数字相加却对不上总数。
@@ -49,6 +74,10 @@ function sumNutrition(rows) {
   NUTRIENTS.forEach(key => {
     total[key] = round1(rows.reduce((sum, row) => sum + row[key], 0));
   });
+  const parts = rows.map(row => Array.isArray(row.foods) ? sumNutrition(row.foods) : withFiber(row));
+  total.fiber = round1(parts.reduce((sum, row) => sum + (row.fiber || 0), 0));
+  total.fiberMissing = parts.reduce((sum, row) => sum + (row.fiberMissing || (row.fiber === null ? 1 : 0)), 0);
+  total.fiberLabel = total.fiberMissing ? total.fiber + ' g（已知合计，部分食物暂无数据）' : total.fiber + ' g';
   return total;
 }
 
@@ -106,4 +135,4 @@ function buildFoodPlan(target, mode = 'raw') {
   return { meals, total, differences, needsAdjustment, mode };
 }
 
-module.exports = { FOODS, MEAT_OPTIONS, foodPortion, sumNutrition, meatReference, chickenReference, buildFoodPlan };
+module.exports = { FOODS, MEAT_OPTIONS, foodPortion, sumNutrition, withFiber, meatReference, chickenReference, buildFoodPlan };

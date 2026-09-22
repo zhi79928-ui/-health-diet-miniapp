@@ -30,16 +30,17 @@
         <view wx:if="{{!day.diaryOnly}}" class="track"><view style="width: {{item.percent}}%"></view></view>
         <view wx:if="{{!day.diaryOnly}}" class="muted">{{item.over > 0 ? '已超过参考目标 ' + item.over : '距参考目标还差 ' + item.remaining}} {{item.unit}}</view>
       </view>
+      <view class="summary-item">已记录膳食纤维：{{day.consumed.fiberLabel}}</view>
       <view class="muted">{{day.diaryOnly ? '当前只记录摄入，不设置热量目标。需要时可到“计划”生成方案。' : '差额用于记录对照，无需为了填满进度条强行进食。'}}</view>
     </view>
     <view class="actions"><button class="secondary" bindtap="goPlan">调整目标 / 生成方案</button><button class="secondary" bindtap="copyYesterday">沿用前一天食谱</button></view>
     <view class="muted space">更新方案或沿用食谱会保留已记录餐次，只替换未记录餐次。</view>
     <view class="panel" wx:for="{{day.meals}}" wx:for-item="meal" wx:for-index="mealIndex" wx:key="name">
       <view class="topline"><view class="heading">{{meal.name}}</view><text class="badge">{{meal.logged ? '已记录' : '待记录'}}</text></view>
-      <view class="muted">{{meal.calories}} kcal · 蛋白 {{meal.protein}} g · 碳水 {{meal.carbs}} g · 脂肪 {{meal.fat}} g</view>
+      <view class="muted">{{meal.calories}} kcal · 蛋白 {{meal.protein}} g · 碳水 {{meal.carbs}} g · 脂肪 {{meal.fat}} g</view><view class="muted">膳食纤维：{{meal.fiberLabel}}</view>
       <view wx:for="{{meal.foods}}" wx:for-item="food" wx:for-index="foodIndex" wx:key="rowKey" class="food-line">
         <view class="topline"><view class="food-main"><view>{{food.name}} <text class="strong">{{food.grams}} {{food.unit || 'g'}}</text></view><view class="badge">{{food.state}}</view></view><button size="mini" class="small-button" disabled="{{meal.logged}}" data-meal="{{mealIndex}}" data-food="{{foodIndex}}" bindtap="openEditor">换菜 / 改量</button></view>
-        <view class="muted">{{food.calories}} kcal · 蛋白 {{food.protein}} g · 碳水 {{food.carbs}} g · 脂肪 {{food.fat}} g</view>
+        <view class="muted">{{food.calories}} kcal · 蛋白 {{food.protein}} g · 碳水 {{food.carbs}} g · 脂肪 {{food.fat}} g</view><view class="muted">膳食纤维：{{food.fiberLabel}}</view>
         <view class="badge space">做法参考：{{food.cookingLabel}}</view>
         <view class="actions space"><button size="mini" class="small-button" data-meal="{{mealIndex}}" data-food="{{foodIndex}}" bindtap="collectFood">☆ 收藏食物</button><button size="mini" class="small-button" data-meal="{{mealIndex}}" data-food="{{foodIndex}}" bindtap="showCooking">做法与称重 →</button></view>
       </view>
@@ -48,7 +49,7 @@
       <view class="actions space"><button class="secondary" disabled="{{meal.logged}}" data-meal="{{mealIndex}}" data-add="yes" bindtap="openEditor">＋ 添加食物</button><button class="{{meal.logged ? 'secondary' : 'primary'}}" data-meal="{{mealIndex}}" bindtap="toggleMeal">{{meal.logged ? '取消这餐记录' : '按以上食物记录这餐'}}</button></view>
       <view class="muted space">{{meal.logged ? '修改已吃食物：先取消记录，改完再记录。' : '没有全吃完？先改成实际克数再记录。额外用油也需添加。'}}</view>
     </view>
-    <view wx:if="{{!day.diaryOnly}}" class="panel"><view class="heading">全天食谱与目标</view><view class="muted">包含待记录餐次，反映当前计划，不是已吃总量。</view><view class="topline food-line" wx:for="{{day.summary}}" wx:key="key"><text>{{item.label}}</text><text>{{item.planned}} / {{item.target}} {{item.unit}}（{{item.delta > 0 ? '+' : ''}}{{item.delta}}）</text></view><view class="muted">替换只保持所选的一项营养近似相等，其他营养会变化，请核对全天合计。</view></view>
+    <view wx:if="{{!day.diaryOnly}}" class="panel"><view class="heading">全天食谱与目标</view><view class="muted">食谱膳食纤维：{{day.planned.fiberLabel}}</view><view class="muted">包含待记录餐次，反映当前计划，不是已吃总量。</view><view class="topline food-line" wx:for="{{day.summary}}" wx:key="key"><text>{{item.label}}</text><text>{{item.planned}} / {{item.target}} {{item.unit}}（{{item.delta > 0 ? '+' : ''}}{{item.delta}}）</text></view><view class="muted">替换只保持所选的一项营养近似相等，其他营养会变化，请核对全天合计。</view></view>
   </block>
   <button class="secondary" bindtap="goFoods">查食物蛋白质与生熟重</button>
   <view class="muted space">这是一般健康管理工具，不能代替个体营养评估。清除缓存或更换设备不会自动保留本机记录。</view>
@@ -56,30 +57,22 @@
 <view wx:if="{{editor}}" class="overlay">
   <scroll-view scroll-y="true" class="editor-sheet">
     <view class="topline"><view class="heading">{{editor.original ? '调整这项食物' : '添加实际食物'}}</view><button size="mini" class="small-button" bindtap="closeEditor">关闭</button></view>
-    <view class="actions space"><button class="{{editor.custom ? 'secondary' : 'primary'}}" data-mode="database" bindtap="setEntryMode">食物库</button><button class="{{editor.custom ? 'primary' : 'secondary'}}" data-mode="label" bindtap="setEntryMode">按包装录入</button></view>
+    <view class="muted space">选择食物及称重状态，再填实际克数。生重与熟重不能混用。</view>
     <block wx:if="{{!editor.custom}}">
     <view class="actions space"><button size="mini" class="{{foodCategory === 'all' ? 'primary' : 'secondary'}}" data-category="all" bindtap="onFoodCategory">全部食物</button><button size="mini" class="{{foodCategory === 'staples' ? 'primary' : 'secondary'}}" data-category="staples" bindtap="onFoodCategory">主食 / 薯类 / 粗粮</button></view>
     <view wx:if="{{foodCategory === 'staples'}}" class="muted space">按干重或熟重选择条目；玉米只称玉米粒。换主食可选“尽量保持碳水”，再核对整餐热量。</view>
-    <view wx:if="{{foodCategory === 'staples'}}" class="space"><view class="muted">以下食品请用实际产品标签，避免把不同配方当成同一种：</view><view class="actions"><button size="mini" class="secondary" data-kind="mantou" bindtap="openStapleLabel">白面馒头 · 按包装</button><button size="mini" class="secondary" data-kind="stickyCorn" bindtap="openStapleLabel">糯玉米 · 按包装</button><button size="mini" class="secondary" data-kind="mixedGrain" bindtap="openStapleLabel">混合杂粮饭 · 按包装</button></view></view>
-    <view class="label">搜索食物</view><input class="input" value="{{foodQuery}}" bindinput="onFoodSearch" placeholder="例如：豆浆、燕麦、米饭" />
-    <view class="label">选择食物与称重状态</view><picker range="{{foodOptions}}" range-key="label" value="{{editor.optionIndex}}" bindchange="onSwapFood"><view class="select">{{foodOptions[editor.optionIndex].label}} ▾</view></picker>
+    <view class="actions space"><button size="mini" class="{{foodCategory === 'vegetables' ? 'primary' : 'secondary'}}" data-category="vegetables" bindtap="onFoodCategory">蔬菜</button><button size="mini" class="{{foodCategory === 'fruits' ? 'primary' : 'secondary'}}" data-category="fruits" bindtap="onFoodCategory">水果</button></view>
+    <view wx:if="{{foodCategory === 'vegetables'}}" class="muted space">生重在烹调前称，熟重按条目标明的做法沥水称。未收录熟重的食物请称生重。</view>
+    <view wx:if="{{foodCategory === 'fruits'}}" class="muted space">称实际吃下的果肉及可食果皮，不含果核和不吃的皮。</view>
+    <view class="label">搜索食物</view><input class="input" value="{{foodQuery}}" bindinput="onFoodSearch" placeholder="例如：菜心、香蕉、米饭" />
+    <view class="label">选择食物与称重状态</view><picker disabled="{{!foodOptions.length}}" range="{{foodOptions}}" range-key="label" value="{{editor.optionIndex}}" bindchange="onSwapFood"><view class="select">{{foodOptions.length ? foodOptions[editor.optionIndex].label : '暂无匹配食物'}} ▾</view></picker>
     <block wx:if="{{editor.original ? !editor.original.basis : false}}"><view class="label">替换依据</view><picker range="{{swapModes}}" value="{{editor.modeIndex}}" bindchange="onSwapMode"><view class="select">{{swapModes[editor.modeIndex]}} ▾</view></picker><view class="muted space">原食物：{{editor.original.name}} {{editor.original.grams}} g（{{editor.original.state}}），{{editor.original.calories}} kcal / 蛋白 {{editor.original.protein}} g。</view></block>
     </block>
-    <view wx:if="{{editor.custom}}" class="label-form">
-      <view class="muted space">按包装上每 100 g 或每 100 mL 的数据填写；一份的标签需先换算。空白不当成 0。</view>
-      <view class="label">食物名称 / 品牌</view><input class="input" value="{{editor.form.name}}" data-field="name" bindinput="onLabelField" maxlength="60" placeholder="例如：我的无糖豆浆" />
-      <view class="label">称量状态</view><input class="input" value="{{editor.form.state}}" data-field="state" bindinput="onLabelField" maxlength="60" placeholder="例如：即饮、燕麦干重、熟重" />
-      <view class="label">营养标签单位</view><view class="actions"><button class="{{editor.form.unit === 'g' ? 'primary' : 'secondary'}}" size="mini" data-unit="g" bindtap="onLabelUnit">每 100 g</button><button class="{{editor.form.unit === 'mL' ? 'primary' : 'secondary'}}" size="mini" data-unit="mL" bindtap="onLabelUnit">每 100 mL</button></view>
-      <view class="label">蛋白质（g / 100 {{editor.form.unit}}）</view><input class="input" type="digit" value="{{editor.form.protein}}" data-field="protein" bindinput="onLabelField" placeholder="必填，没有请填 0" />
-      <view class="label">碳水（g / 100 {{editor.form.unit}}）</view><input class="input" type="digit" value="{{editor.form.carbs}}" data-field="carbs" bindinput="onLabelField" placeholder="必填，没有请填 0" />
-      <view class="label">脂肪（g / 100 {{editor.form.unit}}）</view><input class="input" type="digit" value="{{editor.form.fat}}" data-field="fat" bindinput="onLabelField" placeholder="必填，没有请填 0" />
-      <view class="label">热量（每 100 {{editor.form.unit}}，可选）</view><view class="actions"><button class="{{editor.form.energyUnit !== 'kJ' ? 'primary' : 'secondary'}}" size="mini" data-unit="kcal" bindtap="onEnergyUnit">kcal</button><button class="{{editor.form.energyUnit === 'kJ' ? 'primary' : 'secondary'}}" size="mini" data-unit="kJ" bindtap="onEnergyUnit">kJ</button></view><input class="input" type="digit" value="{{editor.form.calories}}" data-field="calories" bindinput="onLabelField" placeholder="留空则按三大营养素估算热量" />
-      <view class="muted space">输入的实际份量必须与标签单位一致，不能把克当成毫升。数据随这项食物保存，可沿用前一天食谱。</view>
-    </view>
+    <view wx:if="{{editor.custom}}" class="muted space">历史食物：{{editor.original.name}}（{{editor.original.state}}）。保留原营养数据，仅调整原单位份量；新食物从食物库选择。</view>
     <view class="label">实际吃的份量（{{editor.custom ? editor.form.unit : 'g'}}）</view><input class="input" type="digit" value="{{editor.grams}}" bindinput="onSwapGrams" placeholder="输入实际克数" />
     <view wx:if="{{editor.error}}" class="notice">{{editor.error}}</view>
-    <view wx:if="{{editor.preview}}" class="preview"><view class="strong">{{editor.preview.calories}} kcal · 蛋白 {{editor.preview.protein}} g</view><view>碳水 {{editor.preview.carbs}} g · 脂肪 {{editor.preview.fat}} g</view><view class="muted">{{editor.preview.note}}</view></view>
-    <view class="muted space">自定义速查条目可能缺少脂肪和碳水，暂不用于完整食谱合计；请在“按包装录入”中填写完整三大营养素。食物数据库数值是近似参考。</view>
+    <view wx:if="{{editor.preview}}" class="preview"><view class="strong">{{editor.preview.calories}} kcal · 蛋白 {{editor.preview.protein}} g</view><view>碳水 {{editor.preview.carbs}} g · 脂肪 {{editor.preview.fat}} g</view><view>膳食纤维：{{editor.preview.fiberLabel || '暂无数据'}}</view><view class="muted">{{editor.preview.note}}</view></view>
+    <view class="muted space">营养按所选食物、称重状态和克数计算，数值为近似参考；油和其他食材分别添加。</view>
     <button class="primary space" disabled="{{!editor.preview}}" bindtap="applyEditor">确认并更新整餐营养</button>
     <button wx:if="{{editor.original}}" class="secondary space" bindtap="removeEditorFood">移除这项食物</button>
   </scroll-view>
