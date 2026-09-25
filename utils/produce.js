@@ -32,5 +32,6 @@ const PRODUCE = {
 Object.values(PRODUCE).forEach(food => { food.sourceUrl = sourceUrl; });
 PRODUCE.broccoliBoiled = { name: '西兰花（水煮）', state: '熟重·沥水', category: 'vegetables', calories: 35, protein: 2.38, carbs: 7.18, fat: 0.41, fiber: 3.3, sourceId: '169967', note: '水煮后沥水称重，不含油；不适用于炒菜。' };
 PRODUCE.carrotBoiled = { name: '胡萝卜（水煮）', aliases: '红萝卜 甘笋', state: '熟重·沥水', category: 'vegetables', calories: 35, protein: 0.76, carbs: 8.22, fat: 0.18, fiber: 3, sourceId: '170394', note: '水煮后沥水称重，不含油；不适用于炒菜。' };
+const { EXPANDED_PRODUCE } = require('./expanded-produce');
+Object.assign(PRODUCE, EXPANDED_PRODUCE);
 module.exports = { PRODUCE };
-
