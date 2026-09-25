@@ -18,7 +18,7 @@
     <button class="primary" bindtap="startDiary">直接记饮食 · 自己搭配每一餐</button>
     <button class="secondary" bindtap="goPlan">设置目标与生成方案</button>
     <button class="secondary" bindtap="copyYesterday">沿用前一天的食谱</button>
-    <view class="muted">无需注册，计划与记录保存在本机。</view>
+    <view class="muted">无需注册也能使用；记录默认保存在本机，登录后可主动备份。</view>
   </view>
   <block wx:if="{{day}}">
     <view wx:for="{{day.warnings}}" wx:key="*this" class="notice">{{item}}</view>
@@ -46,13 +46,14 @@
       </view>
       <view wx:if="{{!meal.foods.length}}" class="muted space">这餐暂无食物，请添加实际吃的食物。</view>
       <view class="actions space"><button size="mini" class="small-button" data-meal="{{mealIndex}}" bindtap="collectMeal">保存为常吃搭配</button><button size="mini" class="small-button" disabled="{{meal.logged}}" data-meal="{{mealIndex}}" bindtap="openLibrary">从我的常吃添加</button></view>
+      <view class="actions space"><button wx:if="{{mealIndex > 0}}" size="mini" class="small-button" disabled="{{meal.logged}}" data-meal="{{mealIndex}}" bindtap="copyPreviousMeal">复制上一餐</button><button size="mini" class="small-button" disabled="{{meal.logged}}" data-meal="{{mealIndex}}" bindtap="copyYesterdayMeal">复制昨日同餐</button></view>
       <view class="actions space"><button class="secondary" disabled="{{meal.logged}}" data-meal="{{mealIndex}}" data-add="yes" bindtap="openEditor">＋ 添加食物</button><button class="{{meal.logged ? 'secondary' : 'primary'}}" data-meal="{{mealIndex}}" bindtap="toggleMeal">{{meal.logged ? '取消这餐记录' : '按以上食物记录这餐'}}</button></view>
       <view class="muted space">{{meal.logged ? '修改已吃食物：先取消记录，改完再记录。' : '没有全吃完？先改成实际克数再记录。额外用油也需添加。'}}</view>
     </view>
     <view wx:if="{{!day.diaryOnly}}" class="panel"><view class="heading">全天食谱与目标</view><view class="muted">食谱膳食纤维：{{day.planned.fiberLabel}}</view><view class="muted">包含待记录餐次，反映当前计划，不是已吃总量。</view><view class="topline food-line" wx:for="{{day.summary}}" wx:key="key"><text>{{item.label}}</text><text>{{item.planned}} / {{item.target}} {{item.unit}}（{{item.delta > 0 ? '+' : ''}}{{item.delta}}）</text></view><view class="muted">替换只保持所选的一项营养近似相等，其他营养会变化，请核对全天合计。</view></view>
   </block>
   <button class="secondary" bindtap="goFoods">查食物蛋白质与生熟重</button>
-  <view class="muted space">这是一般健康管理工具，不能代替个体营养评估。清除缓存或更换设备不会自动保留本机记录。</view>
+  <view class="muted space">这是一般健康管理工具，不能代替个体营养评估。记录默认在本机；清除缓存或换设备前，请先到“我的”主动备份。</view>
 </view>
 <view wx:if="{{editor}}" class="overlay">
   <scroll-view scroll-y="true" class="editor-sheet">
@@ -65,7 +66,11 @@
     <view wx:if="{{foodCategory === 'vegetables'}}" class="muted space">生重在烹调前称，熟重按条目标明的做法沥水称。未收录熟重的食物请称生重。</view>
     <view wx:if="{{foodCategory === 'fruits'}}" class="muted space">称实际吃下的果肉及可食果皮，不含果核和不吃的皮。</view>
     <view class="label">搜索食物</view><input class="input" value="{{foodQuery}}" bindinput="onFoodSearch" placeholder="例如：菜心、香蕉、米饭" />
-    <view class="label">选择食物与称重状态</view><picker disabled="{{!foodOptions.length}}" range="{{foodOptions}}" range-key="label" value="{{editor.optionIndex}}" bindchange="onSwapFood"><view class="select">{{foodOptions.length ? foodOptions[editor.optionIndex].label : '暂无匹配食物'}} ▾</view></picker>
+    <view class="label">选择食物与称重状态 · {{foodOptions.length}} 项</view>
+    <scroll-view wx:if="{{foodOptions.length}}" scroll-y="true" class="food-results">
+      <button wx:for="{{foodOptions}}" wx:key="id" class="food-option {{editor.optionIndex === index ? 'active' : ''}}" data-index="{{index}}" bindtap="onSelectFood">{{item.label}}<text>{{editor.optionIndex === index ? '✓' : ''}}</text></button>
+    </scroll-view>
+    <view wx:else class="notice">暂无匹配食物，请换个名称或分类搜索。</view>
     <block wx:if="{{editor.original ? !editor.original.basis : false}}"><view class="label">替换依据</view><picker range="{{swapModes}}" value="{{editor.modeIndex}}" bindchange="onSwapMode"><view class="select">{{swapModes[editor.modeIndex]}} ▾</view></picker><view class="muted space">原食物：{{editor.original.name}} {{editor.original.grams}} g（{{editor.original.state}}），{{editor.original.calories}} kcal / 蛋白 {{editor.original.protein}} g。</view></block>
     </block>
     <view wx:if="{{editor.custom}}" class="muted space">历史食物：{{editor.original.name}}（{{editor.original.state}}）。保留原营养数据，仅调整原单位份量；新食物从食物库选择。</view>

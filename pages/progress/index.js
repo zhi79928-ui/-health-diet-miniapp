@@ -1,7 +1,7 @@
-const { dateKey, validDate, readWeights, weightEntry, weightTrend, readDays } = require('../../utils/tracker');
+const { dateKey, validDate, readWeights, weightEntry, weightTrend, readDays, nutritionTrend } = require('../../utils/tracker');
 const { readCheckins, statistics, monthCells } = require('../../utils/habits');
 Page({
-  data: { today: dateKey(), date: dateKey(), month: dateKey().slice(0, 7), weekdays: ['日', '一', '二', '三', '四', '五', '六'], cells: [], habit: {}, habitError: '', selectedCheckin: '', weight: '', unitIndex: 0, units: ['kg', '斤'], rows: [], trend: {}, dayRows: [], message: '', error: '' },
+  data: { today: dateKey(), date: dateKey(), month: dateKey().slice(0, 7), weekdays: ['日', '一', '二', '三', '四', '五', '六'], cells: [], habit: {}, habitError: '', selectedCheckin: '', weight: '', unitIndex: 0, units: ['kg', '斤'], rows: [], trend: {}, nutrition: {}, dayRows: [], message: '', error: '' },
   onShow() {
     const today = dateKey();
     this.setData({ date: this.data.date === this.data.today ? today : this.data.date, today });
@@ -13,7 +13,7 @@ Page({
       const rows = readWeights();
       const days = readDays();
       const dayRows = Object.keys(days).sort().reverse().slice(0, 14).map(date => ({ date, completed: days[date].meals.filter(meal => meal.logged).length }));
-      this.setData({ rows: rows.slice().reverse(), trend: weightTrend(rows), dayRows, error: '' });
+      this.setData({ rows: rows.slice().reverse(), trend: weightTrend(rows), nutrition: nutritionTrend(days), dayRows, error: '' });
       wx.nextTick(() => this.drawTrend());
     } catch (error) { this.setData({ error: error.message || '读取失败，请保留本地数据并重试' }); }
   },

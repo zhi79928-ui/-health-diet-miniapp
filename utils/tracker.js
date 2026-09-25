@@ -102,6 +102,15 @@ function toggleMeal(day, mealIndex) {
   result.meals[mealIndex].logged = !result.meals[mealIndex].logged;
   return refreshDay(result);
 }
+function copyMeal(day, targetIndex, sourceDay, sourceIndex = targetIndex) {
+  const result = editableMeal(day, targetIndex);
+  checkDay(sourceDay);
+  if (!Number.isInteger(sourceIndex) || !sourceDay.meals[sourceIndex]) throw new Error('请选择有效来源餐次');
+  if (!sourceDay.meals[sourceIndex].foods.length) throw new Error('来源餐次还没有食物');
+  result.meals[targetIndex].foods = copy(sourceDay.meals[sourceIndex].foods);
+  result.meals[targetIndex].logged = false;
+  return refreshDay(result);
+}
 function replacementGrams(original, id, mode) {
   if (!original || !validNutrition(original) || !Object.prototype.hasOwnProperty.call(FOODS, id)) throw new Error('请选择有效食物');
   if (!['protein', 'calories', 'carbs'].includes(mode)) throw new Error('请选择替换依据');
@@ -145,4 +154,17 @@ function weightTrend(rows, today = dateKey()) {
     change: ordered.length > 1 ? r1(ordered[ordered.length - 1].kg - ordered[0].kg) : null,
     weekAverage: week.length ? r1(week.reduce((sum, row) => sum + row.kg, 0) / week.length) : null, weekCount: week.length };
 }
-module.exports = { createDiary, setLabelFood, dateKey, previousDate, validDate, refreshDay, createDay, copyPlan, replaceFood, addFood, removeFood, toggleMeal, replacementGrams, readDays, saveDay, weightEntry, readWeights, weightTrend };
+function nutritionTrend(days, today = dateKey()) {
+  if (!days || typeof days !== 'object' || Array.isArray(days) || !validDate(today)) throw new Error('饮食趋势数据无效');
+  let start = today;
+  for (let i = 0; i < 6; i++) start = previousDate(start);
+  const rows = Object.keys(days).filter(date => date >= start && date <= today).sort().map(date => refreshDay(days[date])).filter(day => day.completed > 0);
+  const average = key => rows.length ? r1(rows.reduce((sum, day) => sum + day.consumed[key], 0) / rows.length) : null;
+  return {
+    days: rows.length,
+    completeDays: rows.filter(day => day.completed === 4).length,
+    calories: average('calories'), protein: average('protein'), carbs: average('carbs'), fat: average('fat'), fiber: average('fiber'),
+    fiberPartialDays: rows.filter(day => day.consumed.fiberMissing > 0).length
+  };
+}
+module.exports = { createDiary, setLabelFood, dateKey, previousDate, validDate, refreshDay, createDay, copyPlan, copyMeal, replaceFood, addFood, removeFood, toggleMeal, replacementGrams, readDays, saveDay, weightEntry, readWeights, weightTrend, nutritionTrend };

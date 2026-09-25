@@ -72,7 +72,7 @@
 
     <view class="field activity-field"><view class="field-label">我的目标</view><picker range="{{goalOptions}}" range-key="label" value="{{goalIndex}}" bindchange="onGoalChange"><view class="picker-value"><text>{{goalOptions[goalIndex].label}}</text><text class="chevron">⌄</text></view></picker><view class="food-note">BMI 只是参考；请结合训练、腰围和个人情况选择目标。</view></view>
     <button class="primary-button" bindtap="calculate">生成我的饮食方案</button>
-    <view class="privacy-tip">数据仅保存在你的设备本地，不会上传</view>
+    <view class="privacy-tip">记录默认保存在本机；只有你主动使用云备份或订阅提醒时，相关数据才会上传</view>
   </view>
 
   <view wx:if="{{result}}" id="result" class="result-area">

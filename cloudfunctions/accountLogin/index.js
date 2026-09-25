@@ -19,6 +19,10 @@ exports.main = async (event = {}) => {
     await backups.doc(identity.accountId).set({ payload: backup, updatedAt });
     return { ...identity, backup: { updatedAt } };
   }
+  if (event.action === 'deleteBackup') {
+    await backups.doc(identity.accountId).remove();
+    return { ...identity, backup: null };
+  }
   const record = await find(identity.accountId);
   if (event.action === 'status') return { ...identity, backup: record ? { updatedAt: record.updatedAt } : null };
   if (event.action === 'restore') return { ...identity, backup: record ? record.payload : null, updatedAt: record ? record.updatedAt : null };

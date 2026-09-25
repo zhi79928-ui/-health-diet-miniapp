@@ -3,6 +3,7 @@
 .account-row { display: flex; align-items: center; gap: 20rpx; }
 .account-main { flex: 1; min-width: 0; }
 .backup-status { margin-top: 24rpx; padding: 24rpx; background: #f1f8f3; border-radius: 18rpx; }
+.danger-button { color: #9a3e37; background: #fff1ef; border-radius: 18rpx; font-size: 25rpx; padding: 18rpx 14rpx; line-height: 1.65; }
 .status-label { color: #526759; font-size: 23rpx; }
 .status-value { color: #1b6848; font-size: 32rpx; font-weight: 700; margin-top: 10rpx; }
 .disclosure { display: flex; align-items: center; justify-content: space-between; gap: 16rpx; padding: 24rpx 0; margin: 16rpx 0 0; background: transparent; text-align: left; font-size: 25rpx; line-height: 1.6; color: #526759; border-radius: 0; }

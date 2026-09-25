@@ -34,5 +34,6 @@ async function login(consent) {
 async function backup(payload) { if (!current()) throw new Error('请先登录'); return call('backup', { backup: payload }); }
 async function backupStatus() { if (!current()) throw new Error('请先登录'); return call('status'); }
 async function restore() { if (!current()) throw new Error('请先登录'); return call('restore'); }
+async function deleteBackup() { if (!current()) throw new Error('请先登录'); return call('deleteBackup'); }
 function logout() { generation++; profile = null; if (typeof wx !== 'undefined' && wx.removeStorageSync) wx.removeStorageSync(PROFILE_KEY); }
-module.exports = { available, current, login, logout, backup, backupStatus, restore };
+module.exports = { available, current, login, logout, backup, backupStatus, restore, deleteBackup };

@@ -25,6 +25,10 @@
 .label { font-size: 24rpx; color: #526759; margin: 22rpx 0 12rpx; }
 .input, .select { background: #f5f8f6; border: 2rpx solid #dce8df; border-radius: 16rpx; padding: 22rpx; font-size: 27rpx; line-height: 1.6; }
 .input { height: 48rpx; }
+.food-results { max-height: 360rpx; border: 2rpx solid #dce8df; border-radius: 16rpx; background: #f8faf8; }
+.food-option { display: flex; justify-content: space-between; align-items: center; width: 100%; margin: 0; padding: 18rpx 22rpx; border-radius: 0; border-bottom: 1rpx solid #e4ece7; background: transparent; color: #364d40; text-align: left; font-size: 24rpx; line-height: 1.5; }
+.food-option::after { border: none; }
+.food-option.active { color: #176843; background: #e8f4ec; font-weight: 700; }
 .notice { color: #895a18; background: #fff3df; border-radius: 16rpx; padding: 20rpx; font-size: 24rpx; line-height: 1.8; margin: 18rpx 0; }
 .overlay { position: fixed; top: 0; bottom: 0; left: 0; right: 0; background: rgba(12, 30, 20, .45); z-index: 100; display: flex; align-items: flex-end; }
 .editor-sheet { width: 100%; max-height: 85vh; box-sizing: border-box; background: white; border-radius: 32rpx 32rpx 0 0; padding: 32rpx 28rpx calc(env(safe-area-inset-bottom) + 36rpx); }

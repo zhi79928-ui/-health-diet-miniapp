@@ -51,6 +51,24 @@ Page({
       }
     });
   },
+  deleteCloudBackup() {
+    if (this.data.backupBusy || !this.data.backupMeta) return;
+    wx.showModal({
+      title: '删除云端备份？',
+      content: '只删除当前微信账号的云端副本，不会删除这台设备上的饮食、体重或打卡记录。此操作无法撤销。',
+      confirmText: '确认删除',
+      confirmColor: '#b5483f',
+      success: async result => {
+        if (!result.confirm) return;
+        this.setData({ backupBusy: true, backupMessage: '' });
+        try {
+          await account.deleteBackup();
+          this.setData({ backupMeta: null, backupMessage: '云端备份已删除，本机记录仍然保留。' });
+        } catch (error) { this.setData({ backupMessage: error.message || '删除失败，请检查网络后重试' }); }
+        finally { this.setData({ backupBusy: false }); }
+      }
+    });
+  },
   async refreshReminder() {
     if (!reminders.ready()) return;
     try {

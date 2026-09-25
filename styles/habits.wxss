@@ -28,3 +28,7 @@
 .achievement { text-align: center; border-radius: 22rpx; padding: 18rpx 0; background: #f5f6f2; color: #778275; font-size: 25rpx; }
 .achievement.earned { background: #fff3da; color: #8b6225; }
 .medal { font-size: 46rpx; line-height: 1.5; }
+.nutrition-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 14rpx; margin: 24rpx 0; }
+.nutrition-grid > view { display: flex; align-items: baseline; gap: 8rpx; padding: 20rpx; border-radius: 18rpx; background: #f3f7ef; }
+.nutrition-grid .strong { font-size: 34rpx; }
+.nutrition-grid .muted { display: block; margin-left: auto; }

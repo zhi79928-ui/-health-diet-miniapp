@@ -40,7 +40,9 @@ async function run() {
  wx.cloud.callFunction=async()=>({result:{ok:false}});await assert.rejects(account.login(true),/验证失败/);assert.equal(account.current(),null);
  wx.cloud.callFunction=async()=>{throw new Error('offline');};await me.login();assert.equal(me.data.profile,null);assert.equal(me.data.busy,false);
  let resolve;wx.cloud.callFunction=()=>new Promise(r=>resolve=r);const pending=account.login(true);account.logout();resolve({result:a});await assert.rejects(pending,/取消/);assert.equal(account.current(),null);
- wx.cloud.callFunction=async()=>({result:a});await account.login(true);wx.cloud.callFunction=async()=>({result:b});await assert.rejects(account.backupStatus(),/账号已变更/);assert.equal(account.current(),null);
+ wx.cloud.callFunction=async()=>({result:a});await account.login(true);
+ wx.cloud.callFunction=async request=>({result:{...a,backup:null}});const deleted=await account.deleteBackup();assert.equal(deleted.backup,null);
+ wx.cloud.callFunction=async()=>({result:b});await assert.rejects(account.backupStatus(),/账号已变更/);assert.equal(account.current(),null);
  config.envId='';console.log('Staples and accounts: serving state, carb swaps, filters, label template, consent, identity isolation, failures and logout races passed');
 }
 run().catch(error=>{console.error(error);process.exitCode=1;});

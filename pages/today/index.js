@@ -6,7 +6,7 @@ const reminders = require('../../utils/reminders');
 const { labelPortion } = require('../../utils/label-foods');
 const { createDiary, setLabelFood } = require('../../utils/tracker');
 const { readCheckins, evidence, checkIn, statistics } = require('../../utils/habits');
-const { dateKey, validDate, previousDate, refreshDay, copyPlan, replaceFood, addFood, removeFood, toggleMeal, replacementGrams, readDays, saveDay } = require('../../utils/tracker');
+const { dateKey, validDate, previousDate, refreshDay, copyPlan, copyMeal, replaceFood, addFood, removeFood, toggleMeal, replacementGrams, readDays, saveDay } = require('../../utils/tracker');
 const options = Object.keys(FOODS).map(id => ({ id, label: `${FOODS[id].name} · ${FOODS[id].state}` }));
 Page({
   data: { today: dateKey(), selectedDate: dateKey(), day: null, error: '', editor: null, foodOptions: options,
@@ -129,6 +129,25 @@ Page({
       this.persist(copyPlan(previous, this.data.selectedDate, this.data.day));
     } catch (error) { this.report(error); }
   },
+  copyPreviousMeal(event) {
+    try {
+      this.checkRollover();
+      const mealIndex = Number(event.currentTarget.dataset.meal);
+      if (mealIndex < 1) throw new Error('早餐前没有上一餐');
+      this.persist(copyMeal(this.data.day, mealIndex, this.data.day, mealIndex - 1));
+      wx.showToast({ title: '已复制上一餐，可继续改克数', icon: 'none' });
+    } catch (error) { this.report(error); }
+  },
+  copyYesterdayMeal(event) {
+    try {
+      this.checkRollover();
+      const mealIndex = Number(event.currentTarget.dataset.meal);
+      const previous = readDays()[previousDate(this.data.selectedDate)];
+      if (!previous) throw new Error('昨日还没有饮食记录');
+      this.persist(copyMeal(this.data.day, mealIndex, previous, mealIndex));
+      wx.showToast({ title: '已复制昨日同餐，可继续改克数', icon: 'none' });
+    } catch (error) { this.report(error); }
+  },
   toggleMeal(event) {
     try { this.checkRollover(); this.persist(toggleMeal(this.data.day, Number(event.currentTarget.dataset.meal))); }
     catch (error) { this.report(error); }
@@ -193,6 +212,12 @@ Page({
   },
   onSwapFood(event) {
     const optionIndex = Number(event.detail.value);
+    if (!Number.isInteger(optionIndex) || !this.data.foodOptions[optionIndex] || !this.data.editor) return;
+    this.setData({ 'editor.optionIndex': optionIndex });
+    this.previewEditor(true);
+  },
+  onSelectFood(event) {
+    const optionIndex = Number(event.currentTarget.dataset.index);
     if (!Number.isInteger(optionIndex) || !this.data.foodOptions[optionIndex] || !this.data.editor) return;
     this.setData({ 'editor.optionIndex': optionIndex });
     this.previewEditor(true);
