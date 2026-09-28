@@ -1,14 +1,14 @@
 @import "../../styles/tracking.wxss";
 @import "../../styles/habits.wxss";
-.flow-header { margin: 16rpx 0 28rpx; }
+.flow-header { margin: 20rpx 0 36rpx; }
 .flow-header .title { margin-bottom: 0; }
 .guide-panel { border: 2rpx solid #dce9df; }
-.guide-step { display: flex; align-items: flex-start; gap: 20rpx; margin-top: 28rpx; line-height: 1.7; }
+.guide-step { display: flex; align-items: flex-start; gap: 24rpx; margin-top: 34rpx; line-height: 1.85; }
 .guide-step > view { flex: 1; min-width: 0; }
 .intake-energy { margin: 20rpx 0; color: #19684a; }
 .intake-energy > text { font-size: 60rpx; font-weight: 700; }
-.meal-shortcuts { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14rpx; margin: 24rpx 0; }
-.meal-shortcut { width: 100%; margin: 0; padding: 16rpx 8rpx; background: #f3f6f2; color: #52685b; font-size: 28rpx; line-height: 1.7; }
+.meal-shortcuts { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 18rpx; margin: 30rpx 0; }
+.meal-shortcut { width: 100%; margin: 0; padding: 22rpx 10rpx; background: #f3f6f2; color: #52685b; font-size: 28rpx; line-height: 1.8; }
 .meal-shortcut text { font-size: 24rpx; }
 .meal-shortcut.recorded { background: #e7f2eb; color: #19684a; }
-.meal-feedback { margin-top: 24rpx; padding: 24rpx; background: #edf5ef; color: #245d46; border-radius: 20rpx; line-height: 1.7; }
+.meal-feedback { margin-top: 30rpx; padding: 30rpx; background: #edf5ef; color: #245d46; border-radius: 22rpx; line-height: 1.85; }

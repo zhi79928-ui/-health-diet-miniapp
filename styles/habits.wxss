@@ -1,17 +1,17 @@
-.visual-hero { position: relative; height: 360rpx; overflow: hidden; border-radius: 32rpx; margin-bottom: 28rpx; background: #f3ecdc; }
+.visual-hero { position: relative; height: 380rpx; overflow: hidden; border-radius: 34rpx; margin-bottom: 36rpx; background: #f3ecdc; }
 .hero-art { position: absolute; width: 100%; height: 100%; }
 .hero-shade { position: absolute; width: 100%; height: 100%; background: linear-gradient(90deg,rgba(249,246,232,.95),rgba(249,246,232,.6) 45%,rgba(249,246,232,0) 85%); }
-.visual-copy { position: relative; padding: 38rpx 30rpx; }
+.visual-copy { position: relative; padding: 46rpx 36rpx; }
 .visual-title { font-size: 44rpx; font-weight: 800; line-height: 1.45; color: #183f30; margin: 24rpx 0 12rpx; }
-.visual-sub { font-size: 22rpx; color: #526957; max-width: 340rpx; line-height: 1.6; }
-.compact-hero { height: 280rpx; }
+.visual-sub { font-size: 25rpx; color: #526957; max-width: 360rpx; line-height: 1.75; }
+.compact-hero { height: 300rpx; }
 .compact-hero .visual-title { font-size: 36rpx; }
 .habit-panel { border: 1rpx solid #deeadb; }
-.habit-tasks { margin: 26rpx 0; }
-.task { display: flex; gap: 20rpx; align-items: center; padding: 20rpx; border-radius: 20rpx; background: #f7f7f1; margin-bottom: 12rpx; font-size: 26rpx; }
+.habit-tasks { margin: 32rpx 0; }
+.task { display: flex; gap: 24rpx; align-items: center; padding: 26rpx 24rpx; border-radius: 22rpx; background: #f7f7f1; margin-bottom: 18rpx; font-size: 27rpx; line-height: 1.6; }
 .task-done { background: #edf6ee; }
 .task-symbol { background: #fff; border-radius: 50%; width: 56rpx; height: 56rpx; line-height: 56rpx; text-align: center; color: #297452; font-weight: 700; flex-shrink: 0; }
-.habit-stats { display: flex; justify-content: space-around; text-align: center; background: #f3f7ef; border-radius: 24rpx; padding: 24rpx 8rpx; margin: 24rpx 0; color: #637265; font-size: 23rpx; }
+.habit-stats { display: flex; justify-content: space-around; text-align: center; background: #f3f7ef; border-radius: 24rpx; padding: 30rpx 8rpx; margin: 30rpx 0; color: #637265; font-size: 25rpx; }
 .stat-number { color: #246348; font-size: 48rpx; font-weight: 800; margin-bottom: 6rpx; }
 .calendar-nav { margin: 26rpx 0 16rpx; }
 .calendar-nav button { margin: 0; }
@@ -28,7 +28,7 @@
 .achievement { text-align: center; border-radius: 22rpx; padding: 18rpx 0; background: #f5f6f2; color: #778275; font-size: 25rpx; }
 .achievement.earned { background: #fff3da; color: #8b6225; }
 .medal { font-size: 46rpx; line-height: 1.5; }
-.nutrition-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 14rpx; margin: 24rpx 0; }
-.nutrition-grid > view { display: flex; align-items: baseline; gap: 8rpx; padding: 20rpx; border-radius: 18rpx; background: #f3f7ef; }
+.nutrition-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 18rpx; margin: 30rpx 0; }
+.nutrition-grid > view { display: flex; flex-wrap: wrap; align-items: baseline; gap: 10rpx; padding: 28rpx 24rpx; border-radius: 20rpx; background: #f3f7ef; }
 .nutrition-grid .strong { font-size: 34rpx; }
 .nutrition-grid .muted { display: block; margin-left: auto; }
