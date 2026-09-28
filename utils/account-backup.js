@@ -2,12 +2,13 @@ const KEYS = [
   'healthForm',
   'nutritionDaysV1',
   'weightHistoryV1',
+  'waistHistoryV1',
   'habitCheckinsV1',
   'customMeatsV1',
   'favoriteMealsV1'
 ];
 const MAX_BYTES = 800 * 1024;
-const ARRAY_KEYS = new Set(['weightHistoryV1', 'customMeatsV1', 'favoriteMealsV1']);
+const ARRAY_KEYS = new Set(['weightHistoryV1', 'waistHistoryV1', 'customMeatsV1', 'favoriteMealsV1']);
 
 function clone(value) { return JSON.parse(JSON.stringify(value)); }
 function byteLength(value) { return encodeURIComponent(value).replace(/%[0-9A-F]{2}/gi, 'x').length; }
@@ -51,4 +52,22 @@ function restore(backup) {
   }
 }
 
-module.exports = { KEYS, collect, restore };
+// Store the confirmed snapshot, not a timestamp alone: edits made during upload remain pending.
+function canonical(value) {
+  if (Array.isArray(value)) return '[' + value.map(canonical).join(',') + ']';
+  if (value && typeof value === 'object') return '{' + Object.keys(value).sort().map(key => JSON.stringify(key) + ':' + canonical(value[key])).join(',') + '}';
+  return JSON.stringify(value);
+}
+function remember(accountId, updatedAt, payload) {
+  try { wx.setStorageSync('backupCheckpointV1', { accountId, updatedAt, snapshot: canonical(payload) }); return true; }
+  catch (_) { return false; }
+}
+function status(accountId, meta) {
+  if (!meta) return '本机记录尚未备份到当前账号。';
+  try {
+    const saved = wx.getStorageSync('backupCheckpointV1');
+    if (!saved || saved.accountId !== accountId || saved.updatedAt !== meta.updatedAt) return '云端已有备份；尚未确认与本机记录是否一致。';
+    return saved.snapshot === canonical(collect()) ? '本机记录与最近备份一致。' : '本机有新记录或修改尚未备份。';
+  } catch (_) { return '暂时无法比较备份，请保留本机记录。'; }
+}
+module.exports = { KEYS, collect, restore, remember, status };

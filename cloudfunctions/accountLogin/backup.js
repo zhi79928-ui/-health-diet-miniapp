@@ -2,12 +2,13 @@ const ALLOWED_KEYS = new Set([
   'healthForm',
   'nutritionDaysV1',
   'weightHistoryV1',
+  'waistHistoryV1',
   'habitCheckinsV1',
   'customMeatsV1',
   'favoriteMealsV1'
 ]);
 const MAX_BYTES = 800 * 1024;
-const ARRAY_KEYS = new Set(['weightHistoryV1', 'customMeatsV1', 'favoriteMealsV1']);
+const ARRAY_KEYS = new Set(['weightHistoryV1', 'waistHistoryV1', 'customMeatsV1', 'favoriteMealsV1']);
 
 function validateBackup(backup) {
   if (!backup || backup.version !== 1 || !backup.data || Array.isArray(backup.data) || typeof backup.data !== 'object') throw new Error('备份格式无效');

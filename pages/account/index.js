@@ -12,6 +12,7 @@ Page({
   data: { ready: false, profile: null, agreed: false, busy: false, message: '', backupBusy: false, backupMeta: null, backupMessage: '', reminderReady: false, reminderTime: '20:30', reminderBusy: false, reminderMessage: '', reminderJob: null },
   onShow() {
     const profile = account.current();
+    this.setData({ backupHint: profile ? accountBackup.status(profile.accountId, this.data.backupMeta) : '' });
     this.setData({ ready: account.available(), profile, reminderReady: reminders.ready() });
     if (profile) this.refreshBackup();
     try { this.setData({ reminderTime: reminders.preference().time }); } catch (error) { this.setData({ reminderMessage: error.message }); }
@@ -20,6 +21,7 @@ Page({
   async refreshBackup() {
     try {
       const result = await account.backupStatus();
+      this.setData({ backupHint: accountBackup.status(result.accountId, result.backup) });
       this.setData({ backupMeta: result.backup ? { ...result.backup, label: backupTime(result.backup.updatedAt) } : null, backupMessage: result.backup ? '' : '云端还没有备份。' });
     } catch (error) { this.setData({ backupMessage: error.message || '暂时无法读取云端备份状态' }); }
   },
@@ -27,7 +29,10 @@ Page({
     if (this.data.backupBusy) return;
     this.setData({ backupBusy: true, backupMessage: '' });
     try {
-      const result = await account.backup(accountBackup.collect());
+      const payload = accountBackup.collect();
+      const result = await account.backup(payload);
+      accountBackup.remember(result.accountId, result.backup.updatedAt, payload);
+      this.setData({ backupHint: accountBackup.status(result.accountId, result.backup) });
       this.setData({ backupMeta: { ...result.backup, label: backupTime(result.backup.updatedAt) }, backupMessage: '本机记录已备份到云端。' });
     } catch (error) { this.setData({ backupMessage: error.message || '备份失败，请检查网络后重试' }); }
     finally { this.setData({ backupBusy: false }); }
@@ -36,7 +41,7 @@ Page({
     if (this.data.backupBusy || !this.data.backupMeta) return;
     wx.showModal({
       title: '恢复云端备份？',
-      content: '云端记录会替换这台设备上的饮食、体重、打卡、自定义食物和常用餐记录。',
+      content: '云端记录会替换本机饮食、体重、腰围、打卡、自定义食物、常用餐和健康设置。旧备份没有腰围时，本机腰围也会被清除。',
       confirmText: '确认恢复',
       success: async result => {
         if (!result.confirm) return;
@@ -45,6 +50,8 @@ Page({
           const response = await account.restore();
           if (!response.backup) throw new Error('云端还没有备份');
           accountBackup.restore(response.backup);
+          accountBackup.remember(response.accountId, response.updatedAt, accountBackup.collect());
+          this.setData({ backupMeta: { updatedAt: response.updatedAt, label: backupTime(response.updatedAt) }, backupHint: accountBackup.status(response.accountId, { updatedAt: response.updatedAt }) });
           this.setData({ backupMessage: '云端记录已恢复到本机。返回“今日”即可查看。' });
         } catch (error) { this.setData({ backupMessage: error.message || '恢复失败，本机原有记录已保留' }); }
         finally { this.setData({ backupBusy: false }); }
@@ -63,6 +70,7 @@ Page({
         this.setData({ backupBusy: true, backupMessage: '' });
         try {
           await account.deleteBackup();
+          this.setData({ backupHint: '本机记录尚未备份到当前账号。' });
           this.setData({ backupMeta: null, backupMessage: '云端备份已删除，本机记录仍然保留。' });
         } catch (error) { this.setData({ backupMessage: error.message || '删除失败，请检查网络后重试' }); }
         finally { this.setData({ backupBusy: false }); }

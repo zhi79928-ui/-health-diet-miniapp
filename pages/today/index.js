@@ -134,8 +134,7 @@ Page({
       this.checkRollover();
       const mealIndex = Number(event.currentTarget.dataset.meal);
       if (mealIndex < 1) throw new Error('早餐前没有上一餐');
-      this.persist(copyMeal(this.data.day, mealIndex, this.data.day, mealIndex - 1));
-      wx.showToast({ title: '已复制上一餐，可继续改克数', icon: 'none' });
+      this.confirmMealCopy(mealIndex, this.data.day, mealIndex - 1);
     } catch (error) { this.report(error); }
   },
   copyYesterdayMeal(event) {
@@ -144,9 +143,22 @@ Page({
       const mealIndex = Number(event.currentTarget.dataset.meal);
       const previous = readDays()[previousDate(this.data.selectedDate)];
       if (!previous) throw new Error('昨日还没有饮食记录');
-      this.persist(copyMeal(this.data.day, mealIndex, previous, mealIndex));
-      wx.showToast({ title: '已复制昨日同餐，可继续改克数', icon: 'none' });
+      this.confirmMealCopy(mealIndex, previous, mealIndex);
     } catch (error) { this.report(error); }
+  },
+  confirmMealCopy(mealIndex, source, sourceIndex) {
+    const snapshot = JSON.stringify(this.data.day);
+    const next = copyMeal(this.data.day, mealIndex, source, sourceIndex);
+    const apply = () => {
+      try {
+        this.checkRollover();
+        if (JSON.stringify(this.data.day) !== snapshot) throw new Error('餐次已变化，请重新选择复制');
+        this.persist(next);
+        wx.showToast({ title: '已复制，可继续修改克数', icon: 'none' });
+      } catch (error) { this.report(error); }
+    };
+    if (!this.data.day.meals[mealIndex].foods.length) return apply();
+    wx.showModal({ title: '替换这餐的食物？', content: '这餐已有食物。复制会替换整餐的食物和克数，取消则保留原内容。', confirmText: '确认替换', success: result => { if (result.confirm) apply(); } });
   },
   toggleMeal(event) {
     try { this.checkRollover(); this.persist(toggleMeal(this.data.day, Number(event.currentTarget.dataset.meal))); }

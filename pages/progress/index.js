@@ -1,9 +1,11 @@
 const { dateKey, validDate, readWeights, weightEntry, weightTrend, readDays, nutritionTrend } = require('../../utils/tracker');
 const { readCheckins, statistics, monthCells } = require('../../utils/habits');
+const waist = require('../../utils/waist');
 Page({
   data: { today: dateKey(), date: dateKey(), month: dateKey().slice(0, 7), weekdays: ['日', '一', '二', '三', '四', '五', '六'], cells: [], habit: {}, habitError: '', selectedCheckin: '', weight: '', unitIndex: 0, units: ['kg', '斤'], rows: [], trend: {}, nutrition: {}, dayRows: [], message: '', error: '' },
   onShow() {
     const today = dateKey();
+    this.setData({ waistDate: !this.data.waistDate || this.data.waistDate === this.data.today ? today : this.data.waistDate });
     this.setData({ date: this.data.date === this.data.today ? today : this.data.date, today });
     this.loadRecords();
   },
@@ -14,7 +16,9 @@ Page({
       const days = readDays();
       const dayRows = Object.keys(days).sort().reverse().slice(0, 14).map(date => ({ date, completed: days[date].meals.filter(meal => meal.logged).length }));
       this.setData({ rows: rows.slice().reverse(), trend: weightTrend(rows), nutrition: nutritionTrend(days), dayRows, error: '' });
-      wx.nextTick(() => this.drawTrend());
+      const waistRows = waist.read();
+      this.setData({ waistRows: waistRows.slice().reverse(), waistTrend: waist.trend(waistRows), waistDate: this.data.waistDate || dateKey() });
+      wx.nextTick(() => { this.drawTrend(); this.drawTrend('waistChart', waistRows.map(row => ({ date: row.date, kg: row.cm })).slice(-30)); });
     } catch (error) { this.setData({ error: error.message || '读取失败，请保留本地数据并重试' }); }
   },
   loadCalendar() {
@@ -38,6 +42,28 @@ Page({
     } catch (error) { this.setData({ habitError: error.message }); }
   },
   goToday() { wx.switchTab({ url: '/pages/today/index' }); },
+  goNutrition() { wx.pageScrollTo({ selector: '#nutrition-trend', duration: 300 }); },
+  onWaistDate(event) { this.setData({ waistDate: event.detail.value }); },
+  onWaistInput(event) { this.setData({ waist: event.detail.value }); },
+  saveWaist() {
+    try {
+      const row = waist.entry(this.data.waistDate, this.data.waist);
+      wx.setStorageSync('waistHistoryV1', waist.read().filter(item => item.date !== row.date).concat(row));
+      this.setData({ waistMessage: '腰围已保存；同一天再次保存会更新该日记录。' }); this.loadRecords();
+    } catch (error) { this.setData({ waistMessage: error.message }); }
+  },
+  editWaist(event) {
+    const row = this.data.waistRows.find(item => item.date === event.currentTarget.dataset.date);
+    if (row) { this.setData({ waistDate: row.date, waist: String(row.cm), waistMessage: '修改后点击保存腰围。' }); wx.pageScrollTo({ selector: '#waist-entry', duration: 300 }); }
+  },
+  deleteWaist(event) {
+    const date = event.currentTarget.dataset.date;
+    wx.showModal({ title: '删除腰围记录？', content: date, success: result => {
+      if (!result.confirm) return;
+      try { wx.setStorageSync('waistHistoryV1', waist.read().filter(row => row.date !== date)); this.loadRecords(); }
+      catch (error) { this.setData({ waistMessage: error.message }); }
+    } });
+  },
   onDateChange(event) { if (validDate(event.detail.value)) this.setData({ date: event.detail.value, message: '' }); },
   onWeightInput(event) { this.setData({ weight: event.detail.value, message: '' }); },
   onUnitChange(event) {
@@ -66,13 +92,13 @@ Page({
       this.setData({ message: '已删除所选体重记录。' }); this.loadRecords();
     } catch (error) { this.setData({ message: error.message || '删除失败，请重试' }); }
   },
-  drawTrend() {
+  drawTrend(chartId = 'weightChart', chartRows) {
     if (typeof wx.createSelectorQuery !== 'function') return;
-    const rows = this.data.rows.slice(0, 30).reverse();
+    const rows = chartRows || this.data.rows.slice(0, 30).reverse();
     if (!rows.length) return;
-    wx.createSelectorQuery().in(this).select('#weightChart').boundingClientRect(rect => {
+    wx.createSelectorQuery().in(this).select('#' + chartId).boundingClientRect(rect => {
       if (!rect || !rect.width) return;
-      const ctx = wx.createCanvasContext('weightChart', this);
+      const ctx = wx.createCanvasContext(chartId, this);
       const w = rect.width, h = rect.height, left = 40, top = 18, right = w - 14, bottom = h - 30;
       const min = Math.min(...rows.map(row => row.kg)) - 0.5;
       const max = Math.max(...rows.map(row => row.kg)) + 0.5;
