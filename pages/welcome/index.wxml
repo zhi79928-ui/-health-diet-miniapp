@@ -1,0 +1,24 @@
+<view class="welcome">
+  <view class="brand-mark">轻</view>
+  <view class="eyebrow">LIGHTER DAYS, YOUR OWN PACE</view>
+  <view class="welcome-title">轻体计划</view>
+  <view class="welcome-sub">记录实际饮食，看见体重与腰围变化。<br />一天一小步，也算进步。</view>
+
+  <view class="welcome-card">
+    <view class="heading">登录后再开始</view>
+    <view class="benefits">
+      <view><text>✓</text>验证当前微信身份</view>
+      <view><text>✓</text>可手动备份与恢复记录</view>
+      <view><text>✓</text>换设备前更安心</view>
+    </view>
+    <view wx:if="{{!ready}}" class="notice">账号服务暂不可用，你仍可以免登录使用，记录会保存在本机。</view>
+    <checkbox-group bindchange="onConsent">
+      <label class="consent"><checkbox value="account" checked="{{agreed}}" color="#268b5e" /><text>同意使用微信身份标识登录。不会获取手机号、昵称或头像。</text></label>
+    </checkbox-group>
+    <button class="primary login-button" loading="{{busy}}" disabled="{{!ready || !agreed || busy}}" bindtap="login">微信身份登录</button>
+    <button class="guest-button" disabled="{{busy}}" bindtap="useWithoutLogin">暂不登录，继续使用</button>
+    <view wx:if="{{message}}" class="notice">{{message}}</view>
+  </view>
+
+  <view class="privacy-note">免登录也能完整记录饮食、体重、腰围和打卡；数据默认只保存在本机。登录不会自动上传记录，仍需在“我的”页面主动备份。</view>
+</view>

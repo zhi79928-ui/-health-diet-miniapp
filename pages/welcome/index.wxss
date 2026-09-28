@@ -1,0 +1,15 @@
+@import "../../styles/tracking.wxss";
+page { background: linear-gradient(180deg, #f1f8f3 0%, #fbfdfb 62%, #ffffff 100%); }
+.welcome { min-height: 100vh; box-sizing: border-box; padding: 70rpx 36rpx calc(env(safe-area-inset-bottom) + 40rpx); text-align: center; }
+.brand-mark { width: 112rpx; height: 112rpx; margin: 10rpx auto 28rpx; border-radius: 34rpx; display: flex; align-items: center; justify-content: center; background: #1b6848; color: white; font-size: 52rpx; font-weight: 800; box-shadow: 0 20rpx 48rpx rgba(27, 104, 72, .18); }
+.welcome-title { margin-top: 16rpx; color: #14251c; font-size: 58rpx; font-weight: 800; letter-spacing: 3rpx; }
+.welcome-sub { margin: 22rpx 0 42rpx; color: #64776c; font-size: 27rpx; line-height: 1.85; }
+.welcome-card { background: white; border-radius: 32rpx; padding: 36rpx 30rpx; text-align: left; box-shadow: 0 20rpx 60rpx rgba(28, 68, 45, .08); }
+.benefits { margin: 26rpx 0; color: #526759; font-size: 25rpx; line-height: 2.15; }
+.benefits text { display: inline-block; width: 40rpx; color: #268b5e; font-weight: 800; }
+.consent { display: flex; align-items: flex-start; gap: 12rpx; color: #62736a; font-size: 23rpx; line-height: 1.7; }
+.consent checkbox { flex-shrink: 0; transform: scale(.86); }
+.login-button { width: 100%; margin-top: 28rpx; }
+.guest-button { width: 100%; margin-top: 18rpx; color: #246446; background: transparent; font-size: 25rpx; }
+.guest-button::after { border-color: #d7e5dc; }
+.privacy-note { margin: 30rpx 12rpx 0; color: #7a8981; font-size: 22rpx; line-height: 1.8; text-align: left; }
