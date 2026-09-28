@@ -1,5 +1,8 @@
 @import "../../styles/tracking.wxss";
 @import "../../styles/habits.wxss";
+.recommend-entry { border: 2rpx solid #d6e9dc; }
+.recommend-card { margin-top: 32rpx; padding: 30rpx 24rpx; border: 2rpx solid #dce8df; border-radius: 24rpx; background: #fbfdfb; }
+.recommend-food { margin-top: 22rpx; padding-top: 18rpx; border-top: 1rpx solid #e6eee8; font-size: 26rpx; line-height: 1.8; }
 .flow-header { margin: 20rpx 0 36rpx; }
 .flow-header .title { margin-bottom: 0; }
 .guide-panel { border: 2rpx solid #dce9df; }

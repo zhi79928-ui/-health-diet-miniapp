@@ -19,6 +19,11 @@
   </view>
   <view class="topline"><view><view class="eyebrow">ONE MEAL AT A TIME</view><view class="title">今天，吃得明白</view></view><picker mode="date" value="{{selectedDate}}" end="{{today}}" bindchange="onDateChange"><view class="date-pill">{{selectedDate}} ▾</view></picker></view>
   <view wx:if="{{error}}" class="notice">{{error}}</view>
+  <view wx:if="{{selectedDate === today}}" class="panel recommend-entry">
+    <view class="heading">下一餐，还没想好吃什么？</view>
+    <view class="muted">参考今天已记录的饮食，给你三套食材搭配；份量可再按实际情况调整。</view>
+    <button class="primary space" bindtap="openRecommendation">帮我搭配下一餐</button>
+  </view>
   <view wx:if="{{day}}" class="panel daily-overview">
     <view class="topline"><view class="heading">{{selectedDate === today ? '今日已吃合计' : '所选日期已吃合计'}}</view><text class="badge">{{day.completed}} / 4 餐已记录</text></view>
     <view class="intake-energy"><text>{{day.consumed.calories}}</text> kcal</view>
@@ -109,6 +114,26 @@
   <view class="label">加入 {{selectedDate}} 的哪一餐？</view><picker range="{{mealNames}}" value="{{library.mealIndex}}" bindchange="onLibraryMeal"><view class="select">{{mealNames[library.mealIndex]}} ▾</view></picker>
   <view wx:if="{{!library.rows.length}}" class="preview">还没有收藏。在餐次里点“收藏食物”或“保存为常吃搭配”，下次就在这里一键添加。</view>
   <view wx:for="{{library.rows}}" wx:key="id" class="food-line"><view class="heading">{{item.name}}</view><text class="badge">{{item.kind === 'meal' ? '整餐搭配' : '常吃食物'}}</text><view class="muted space">{{item.summary}}</view><view class="actions space"><button class="primary" size="mini" data-id="{{item.id}}" bindtap="useFavorite">加入这餐</button><button class="secondary" size="mini" data-id="{{item.id}}" bindtap="removeFavorite">移除收藏</button></view></view>
+</scroll-view></view>
+<view wx:if="{{recommendation}}" class="overlay"><scroll-view scroll-y="true" class="editor-sheet">
+  <view class="topline"><view class="heading">下一餐吃什么</view><button size="mini" class="small-button" bindtap="closeRecommendation">关闭</button></view>
+  <view class="label">准备加入哪一餐？</view>
+  <picker range="{{recommendation.pending}}" range-key="name" value="{{recommendation.position}}" bindchange="onRecommendationMeal"><view class="select">{{recommendation.pending[recommendation.position].name}} ▾</view></picker>
+  <view class="muted space">{{recommendation.explanation}}</view>
+  <view class="notice">通用成人搭配参考，不是医疗食谱。含奶、豆、坚果等食材时，请先核对过敏和忌口；特殊饮食需求请遵循专业指导。熟重按所列做法称量，生重食材需做熟再吃。</view>
+  <view wx:for="{{recommendation.choices}}" wx:key="id" class="recommend-card">
+    <view class="heading">{{item.name}}</view>
+    <view class="strong space">{{item.calories}} kcal</view>
+    <view class="muted">蛋白 {{item.protein}} g · 碳水 {{item.carbs}} g · 脂肪 {{item.fat}} g</view>
+    <view class="muted">膳食纤维：{{item.fiberLabel}}</view>
+    <view wx:for="{{item.foods}}" wx:for-item="ingredient" wx:key="id" class="recommend-food">
+      <view>{{ingredient.name}} <text class="strong">{{ingredient.grams}} g</text></view>
+      <view class="badge">{{ingredient.state}}</view>
+    </view>
+    <button class="secondary space" data-id="{{item.id}}" bindtap="chooseRecommendation">采用这套搭配</button>
+  </view>
+  <button class="primary space" bindtap="rotateRecommendations">换一组搭配</button>
+  <view class="muted space">同一餐次提供两组模板轮换，不是无限生成。采用后仅加入待记录餐次，不会自动记为已吃；可修改克数，吃完再确认。</view>
 </scroll-view></view>
 <view wx:if="{{favoriteDraft}}" class="overlay"><view class="editor-sheet"><view class="heading">保存整餐搭配</view><view class="muted space">以后不必逐个搜索食物，加入后仍可按当天实际份量调整。</view><view class="label">给搭配起个名字</view><input class="input" maxlength="40" value="{{favoriteDraft.name}}" bindinput="onFavoriteName" placeholder="例如：豆浆燕麦早餐" /><view class="actions space"><button class="secondary" bindtap="closeFavoriteDraft">取消</button><button class="primary" bindtap="saveMealFavorite">保存搭配</button></view></view></view>
 <view wx:if="{{recipe}}" class="overlay"><scroll-view scroll-y="true" class="editor-sheet">

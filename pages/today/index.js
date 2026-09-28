@@ -3,6 +3,7 @@ const { STAPLE_IDS } = require('../../utils/staples');
 const { readFavorites, saveFavorite, deleteFavorite, applyFavorite } = require('../../utils/favorites');
 const { cookingGuide } = require('../../utils/cooking');
 const reminders = require('../../utils/reminders');
+const { suggest } = require('../../utils/next-meal');
 const { labelPortion } = require('../../utils/label-foods');
 const { createDiary, setLabelFood } = require('../../utils/tracker');
 const { readCheckins, evidence, checkIn, statistics } = require('../../utils/habits');
@@ -12,6 +13,7 @@ Page({
   data: { today: dateKey(), selectedDate: dateKey(), day: null, error: '', editor: null, foodOptions: options,
     library: null, favoriteDraft: null, recipe: null, mealNames: ['早餐', '午餐', '加餐', '晚餐'], foodCategory: 'all', habit: {}, tasks: {}, habitError: '', swapModes: ['尽量保持蛋白质', '尽量保持热量', '手动填写克数', '尽量保持碳水（换主食）'] },
   onShow() {
+    this.setData({ recommendation: null });
     try { this.setData({ guideOpen: wx.getStorageSync('diaryGuideSeenV1') !== true }); }
     catch (_) { this.setData({ guideOpen: true }); }
     const next = dateKey();
@@ -28,6 +30,56 @@ Page({
     catch (error) { this.setData({ habitError: error.message }); }
   },
   goProgress() { wx.switchTab({ url: '/pages/progress/index' }); },
+  openRecommendation() {
+    try {
+      this.checkRollover();
+      if (this.data.selectedDate !== dateKey()) throw new Error('请切换到今天，再搭配下一餐');
+      const day = this.data.day || createDiary(this.data.selectedDate);
+      const pending = day.meals.map((meal, index) => ({ name: meal.name, index })).filter(row => !day.meals[row.index].logged);
+      if (!pending.length) throw new Error('今天四餐均已记录，可在餐次中查看或修改');
+      this.setData({ recommendation: { pending, position: 0, batch: 0, snapshot: JSON.stringify(this.data.day) }, editor: null, library: null });
+      this.refreshRecommendation();
+    } catch (error) { this.report(error); }
+  },
+  refreshRecommendation() {
+    const r = this.data.recommendation;
+    if (!r) return;
+    const day = this.data.day || createDiary(this.data.selectedDate);
+    this.setData({ recommendation: { ...r, ...suggest(day, r.pending[r.position].index, r.batch) } });
+  },
+  onRecommendationMeal(event) {
+    const r = this.data.recommendation, position = Number(event.detail.value);
+    if (!r || !Number.isInteger(position) || !r.pending[position]) return;
+    this.setData({ recommendation: { ...r, position, batch: 0 } });
+    try { this.refreshRecommendation(); } catch (error) { this.closeRecommendation(); this.report(error); }
+  },
+  rotateRecommendations() {
+    if (!this.data.recommendation) return;
+    this.setData({ 'recommendation.batch': this.data.recommendation.batch + 1 });
+    try { this.refreshRecommendation(); } catch (error) { this.closeRecommendation(); this.report(error); }
+  },
+  closeRecommendation() { this.setData({ recommendation: null }); },
+  chooseRecommendation(event) {
+    const r = this.data.recommendation;
+    const choice = r && r.choices.find(item => item.id === Number(event.currentTarget.dataset.id));
+    if (!choice) return;
+    const apply = () => {
+      try {
+        this.checkRollover();
+        if (this.data.recommendation !== r || this.data.selectedDate !== dateKey() || JSON.stringify(this.data.day) !== r.snapshot) throw new Error('记录已变化，请重新生成搭配');
+        const day = this.data.day || createDiary(this.data.selectedDate);
+        const index = r.pending[r.position].index;
+        const source = createDiary(day.date); source.meals[index].foods = choice.foods;
+        this.persist(copyMeal(day, index, source, index));
+        this.closeRecommendation();
+        wx.showToast({ title: '已加入待记录餐次，吃完再确认', icon: 'none' });
+      } catch (error) { this.report(error); }
+    };
+    const index = r.pending[r.position].index;
+    if (this.data.day && this.data.day.meals[index].foods.length) {
+      wx.showModal({ title: '替换这餐的食物？', content: '这餐已有待记录食物，采用搭配会替换整餐。取消则保留原内容。', confirmText: '确认替换', success: result => { if (result.confirm) apply(); } });
+    } else apply();
+  },
   openGuide() { this.setData({ guideOpen: true }); },
   closeGuide() {
     this.setData({ guideOpen: false });
