@@ -12,6 +12,8 @@ Page({
   data: { today: dateKey(), selectedDate: dateKey(), day: null, error: '', editor: null, foodOptions: options,
     library: null, favoriteDraft: null, recipe: null, mealNames: ['早餐', '午餐', '加餐', '晚餐'], foodCategory: 'all', habit: {}, tasks: {}, habitError: '', swapModes: ['尽量保持蛋白质', '尽量保持热量', '手动填写克数', '尽量保持碳水（换主食）'] },
   onShow() {
+    try { this.setData({ guideOpen: wx.getStorageSync('diaryGuideSeenV1') !== true }); }
+    catch (_) { this.setData({ guideOpen: true }); }
     const next = dateKey();
     const selected = this.data.selectedDate === this.data.today ? next : this.data.selectedDate;
     this.loadDay(selected);
@@ -26,6 +28,18 @@ Page({
     catch (error) { this.setData({ habitError: error.message }); }
   },
   goProgress() { wx.switchTab({ url: '/pages/progress/index' }); },
+  openGuide() { this.setData({ guideOpen: true }); },
+  closeGuide() {
+    this.setData({ guideOpen: false });
+    try { wx.setStorageSync('diaryGuideSeenV1', true); }
+    catch (_) { wx.showToast({ title: '本次已收起，下次可能再次显示', icon: 'none' }); }
+  },
+  goBackup() { wx.switchTab({ url: '/pages/account/index' }); },
+  goCheckin() { wx.pageScrollTo({ selector: '#daily-checkin', duration: 300 }); },
+  jumpMeal(event) {
+    const index = Number(event.currentTarget.dataset.meal);
+    if (this.data.day && Number.isInteger(index) && index >= 0 && index < 4) wx.pageScrollTo({ selector: '#meal-' + index, duration: 300 });
+  },
   completeCheckin() {
     try { checkIn(this.data.today); this.loadHabits(); this.syncReminderCheckin(); wx.showToast({ title: '今天的一小步，已记下', icon: 'none' }); }
     catch (error) { this.report(error); this.loadDay(dateKey()); this.loadHabits(); }
@@ -34,7 +48,7 @@ Page({
     try {
       if (!validDate(selectedDate) || selectedDate > dateKey()) throw new Error('请选择今天或之前的日期');
       const days = readDays();
-      this.setData({ today: dateKey(), selectedDate, day: days[selectedDate] ? refreshDay(days[selectedDate]) : null, error: '', editor: null });
+      this.setData({ today: dateKey(), selectedDate, day: days[selectedDate] ? refreshDay(days[selectedDate]) : null, error: '', editor: null, mealFeedback: '' });
     } catch (error) { this.setData({ day: null, editor: null, error: error.message || '读取失败，请保留本地数据并重试' }); }
   },
   onDateChange(event) { this.loadDay(event.detail.value); },
@@ -161,7 +175,13 @@ Page({
     wx.showModal({ title: '替换这餐的食物？', content: '这餐已有食物。复制会替换整餐的食物和克数，取消则保留原内容。', confirmText: '确认替换', success: result => { if (result.confirm) apply(); } });
   },
   toggleMeal(event) {
-    try { this.checkRollover(); this.persist(toggleMeal(this.data.day, Number(event.currentTarget.dataset.meal))); }
+    try {
+      this.checkRollover();
+      const index = Number(event.currentTarget.dataset.meal);
+      this.persist(toggleMeal(this.data.day, index));
+      const meal = this.data.day.meals[index];
+      this.setData({ feedbackMeal: index, mealFeedback: meal.logged ? (this.data.selectedDate !== this.data.today ? '这餐已保存到所选日期；历史餐次不会计入今日打卡。' : this.data.habit.done ? '这餐已保存，营养合计已更新。今日也已打卡。' : '这餐已保存，营养合计已更新。现在可以完成今日打卡，无需等四餐都记完。') : '已取消这餐记录；食物仍保留，修改实际克数后可重新记录。' });
+    }
     catch (error) { this.report(error); }
   },
   openEditor(event) {
