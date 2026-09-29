@@ -129,11 +129,13 @@
     <view wx:for="{{item.foods}}" wx:for-item="ingredient" wx:key="id" class="recommend-food">
       <view>{{ingredient.name}} <text class="strong">{{ingredient.grams}} g</text></view>
       <view class="badge">{{ingredient.state}}</view>
+      <view class="muted">{{ingredient.note}}</view>
     </view>
     <button class="secondary space" data-id="{{item.id}}" bindtap="chooseRecommendation">采用这套搭配</button>
   </view>
-  <button class="primary space" bindtap="rotateRecommendations">换一组搭配</button>
-  <view class="muted space">同一餐次提供两组模板轮换，不是无限生成。采用后仅加入待记录餐次，不会自动记为已吃；可修改克数，吃完再确认。</view>
+  <view class="muted space">第 {{recommendation.groupNumber}} / {{recommendation.groupCount}} 组 · 共 {{recommendation.totalChoices}} 套搭配</view>
+  <button class="primary space" bindtap="rotateRecommendations">{{recommendation.groupNumber === recommendation.groupCount ? '回到第一组' : '换一组搭配'}}</button>
+  <view class="muted space">固定搭配分组轮换，不是无限生成。采用后仅加入待记录餐次，不会自动记为已吃；可修改克数，吃完再确认。</view>
 </scroll-view></view>
 <view wx:if="{{favoriteDraft}}" class="overlay"><view class="editor-sheet"><view class="heading">保存整餐搭配</view><view class="muted space">以后不必逐个搜索食物，加入后仍可按当天实际份量调整。</view><view class="label">给搭配起个名字</view><input class="input" maxlength="40" value="{{favoriteDraft.name}}" bindinput="onFavoriteName" placeholder="例如：豆浆燕麦早餐" /><view class="actions space"><button class="secondary" bindtap="closeFavoriteDraft">取消</button><button class="primary" bindtap="saveMealFavorite">保存搭配</button></view></view></view>
 <view wx:if="{{recipe}}" class="overlay"><scroll-view scroll-y="true" class="editor-sheet">

@@ -7,7 +7,13 @@ const mains = [
   ['鳕鱼红薯配菠菜', [['sweetPotatoBoiled',220],['codRaw',180],['spinach',200],['oil',10]]],
   ['牛肉米饭配西兰花', [['rice',180],['beefRaw',130],['broccoli',200],['oil',5]]],
   ['鸡胸土豆配菠菜', [['potatoBoiled',250],['chickenRaw',140],['spinach',200],['oil',8]]],
-  ['鳕鱼米饭配胡萝卜', [['rice',200],['codRaw',180],['carrot',180],['oil',10]]]
+  ['鳕鱼米饭配胡萝卜', [['rice',200],['codRaw',180],['carrot',180],['oil',10]]],
+  ['鸡腿糙米饭配小白菜', [['brownRice',200],['thighRaw',160],['bokChoy',200],['oil',8]]],
+  ['虾仁玉米配西兰花', [['cornBoiled',220],['shrimpRaw',160],['broccoli',200],['oil',8]]],
+  ['三文鱼藜麦配番茄', [['quinoaCooked',180],['salmonRaw',130],['tomato',200],['oil',5]]],
+  ['猪里脊米饭配卷心菜', [['rice',180],['tenderloinCooked',120],['cabbage',200],['oil',5]]],
+  ['罗非鱼小米饭配上海青', [['milletCooked',220],['tilapiaRaw',180],['shanghaiBokChoy',200],['oil',8]]],
+  ['鸡腿荞麦饭配胡萝卜', [['buckwheatCooked',240],['thighRaw',160],['carrot',180],['oil',8]]]
 ];
 const breakfasts = [
   ['豆浆燕麦配苹果', [['soyMilk',300],['oats',60],['apple',150]]],
@@ -15,7 +21,13 @@ const breakfasts = [
   ['豆浆红薯配杏仁', [['soyMilk',300],['sweetPotatoBoiled',200],['almonds',15]]],
   ['牛奶燕麦配苹果', [['milk',250],['oats',50],['apple',150]]],
   ['豆浆燕麦配香蕉', [['soyMilk',300],['oats',50],['banana',100]]],
-  ['牛奶红薯配杏仁', [['milk',250],['sweetPotatoBoiled',180],['almonds',15]]]
+  ['牛奶红薯配杏仁', [['milk',250],['sweetPotatoBoiled',180],['almonds',15]]],
+  ['牛奶玉米配猕猴桃', [['milk',250],['cornBoiled',180],['kiwi',100]]],
+  ['豆浆小米粥配橙子', [['soyMilk',250],['milletDry',50],['orange',150]]],
+  ['牛奶燕麦配草莓', [['milk',250],['oats',50],['strawberry',150]]],
+  ['豆浆玉米配梨', [['soyMilk',300],['cornBoiled',180],['pear',120]]],
+  ['牛奶烤红薯配猕猴桃', [['milk',250],['sweetPotatoBaked',180],['kiwi',100]]],
+  ['豆浆燕麦配橙子杏仁', [['soyMilk',250],['oats',45],['orange',120],['almonds',10]]]
 ];
 const snacks = [
   ['苹果与牛奶', [['apple',150],['milk',200]]],
@@ -23,7 +35,13 @@ const snacks = [
   ['苹果与杏仁', [['apple',150],['almonds',15]]],
   ['红薯与豆浆', [['sweetPotatoBoiled',100],['soyMilk',200]]],
   ['香蕉与牛奶', [['banana',80],['milk',150]]],
-  ['豆浆与杏仁', [['soyMilk',200],['almonds',15]]]
+  ['豆浆与杏仁', [['soyMilk',200],['almonds',15]]],
+  ['猕猴桃与牛奶', [['kiwi',100],['milk',200]]],
+  ['橙子与杏仁', [['orange',150],['almonds',15]]],
+  ['草莓与牛奶', [['strawberry',150],['milk',200]]],
+  ['梨与豆浆', [['pear',150],['soyMilk',200]]],
+  ['玉米与豆浆', [['cornBoiled',100],['soyMilk',200]]],
+  ['烤红薯与牛奶', [['sweetPotatoBaked',100],['milk',150]]]
 ];
 function suggest(day, index, batch = 0, today = dateKey()) {
   const clean = refreshDay(day);
@@ -47,8 +65,11 @@ function suggest(day, index, batch = 0, today = dateKey()) {
     });
     return best;
   }).sort((a,b) => a.score - b.score || a.id - b.id);
-  const offset = (Number.isInteger(batch) && batch >= 0 ? batch : 0) % 2 * 3;
+  const groupCount = Math.ceil(ranked.length / 3);
+  const groupIndex = (Number.isInteger(batch) && batch >= 0 ? batch : 0) % groupCount;
+  const offset = groupIndex * 3;
   return {
+    groupNumber: groupIndex + 1, groupCount, totalChoices: ranked.length,
     choices: ranked.slice(offset, offset + 3),
     explanation: targeted
       ? `已参考今天已记录的 ${clean.completed} 餐和当前目标，按未记录餐次的预设比例分配参考余量。只在模板份量的 80%～120% 内调整，不保证补齐目标。`

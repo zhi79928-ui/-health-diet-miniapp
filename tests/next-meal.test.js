@@ -7,9 +7,14 @@ let day = t.createDiary(today);
 const original = JSON.stringify(day);
 for (let index = 0; index < 4; index++) {
   const first = suggest(day,index), second = suggest(day,index,1);
+  const groups = Array.from({length: 4}, (_, batch) => suggest(day,index,batch));
+  assert.deepStrictEqual(groups.map(group => group.groupNumber), [1,2,3,4]);
+  assert.ok(groups.every(group => group.totalChoices === 12 && group.groupCount === 4));
+  assert.equal(new Set(groups.flatMap(group => group.choices.map(choice => choice.id))).size,12);
+  assert.deepStrictEqual(suggest(day,index,4).choices,first.choices);
   assert.equal(first.choices.length,3);
   assert.equal(new Set([...first.choices,...second.choices].map(x=>x.id)).size,6);
-  for (const choice of [...first.choices,...second.choices]) {
+  for (const choice of groups.flatMap(group => group.choices)) {
     assert.equal(choice.calories,sumNutrition(choice.foods).calories);
     assert.ok(choice.foods.every(food=>food.state && food.grams>0 && food.grams<1000));
   }
