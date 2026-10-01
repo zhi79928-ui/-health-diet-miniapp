@@ -42,6 +42,7 @@ Page({
     } catch (error) { this.setData({ habitError: error.message }); }
   },
   goToday() { wx.switchTab({ url: '/pages/today/index' }); },
+  goReport() { wx.navigateTo({ url: '/pages/report/index' }); },
   goNutrition() { wx.pageScrollTo({ selector: '#nutrition-trend', duration: 300 }); },
   onWaistDate(event) { this.setData({ waistDate: event.detail.value }); },
   onWaistInput(event) { this.setData({ waist: event.detail.value }); },

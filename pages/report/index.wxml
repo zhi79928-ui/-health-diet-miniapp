@@ -1,0 +1,36 @@
+<view class="screen">
+  <view class="eyebrow">WEEKLY REFLECTION</view>
+  <view class="title">每周饮食与身体报告</view>
+  <view class="muted">按完整的 7 天回顾，不含今天。只描述实际记录，不评价饮食好坏。</view>
+  <view wx:if="{{error}}" class="notice space">{{error}}</view>
+  <block wx:if="{{report}}">
+    <view class="period-nav"><button class="small-button" data-step="-1" bindtap="changePeriod">‹ 上一期</button><view><view class="period-title">{{report.start}} 至 {{report.end}}</view><view class="muted">对照：{{report.previousStart}} 至 {{report.previousEnd}}</view></view><button class="small-button" data-step="1" bindtap="changePeriod" disabled="{{offset >= 0}}">下一期 ›</button></view>
+
+    <view class="panel hero-summary">
+      <view class="topline"><view class="heading">这一期，记录了什么</view><text class="badge">{{report.current.recordedDays}} / 7 天</text></view>
+      <view class="report-stats"><view><text class="stat-number">{{report.current.recordedDays}}</text><text>有饮食记录</text></view><view><text class="stat-number">{{report.current.meals}}</text><text>已记录餐次</text></view><view><text class="stat-number">{{report.current.completeDays}}</text><text>四餐均记录</text></view></view>
+      <view class="muted">对照期记录 {{report.previous.recordedDays}} 天、{{report.previous.meals}} 餐。未记录日期不会补成 0。</view>
+    </view>
+
+    <view class="panel">
+      <view class="heading">7 天记录覆盖</view>
+      <view class="week-grid"><view wx:for="{{report.current.dates}}" wx:key="date" class="day-cell {{item.recorded ? 'recorded' : ''}} {{item.complete ? 'complete' : ''}}"><text>{{item.shortDate}}</text><text class="day-count">{{item.recorded ? item.meals + ' 餐' : '未记'}}</text></view></view>
+      <view class="legend"><text><text class="dot recorded-dot"></text>有记录</text><text><text class="dot complete-dot"></text>四餐均记录</text></view>
+    </view>
+
+    <view class="panel">
+      <view class="heading">饮食记录均值</view>
+      <view class="muted">只使用本期 {{report.current.recordedDays}} 个有餐次记录的日期计算。</view>
+      <view class="metric-list"><view wx:for="{{nutrientRows}}" wx:key="key" class="metric-row"><view><view class="metric-label">{{item.label}}</view><view class="metric-compare">{{item.compare}}</view></view><view class="metric-value"><text>{{item.current === null ? '—' : item.current}}</text><text class="metric-unit">{{item.unit}}</text></view></view></view>
+      <view wx:if="{{report.current.fiberPartialDays}}" class="notice space">本期有 {{report.current.fiberPartialDays}} 天包含暂无纤维数据的食物，纤维均值仅按已知数据合计。</view>
+    </view>
+
+    <view class="panel">
+      <view class="heading">身体记录</view>
+      <view class="muted">采用本期实际测量值；均值不会填补未测量日期。</view>
+      <view wx:for="{{bodyRows}}" wx:key="label" class="body-card"><view class="topline"><view class="metric-label">{{item.label}}</view><text class="badge">{{item.count}} 次测量</text></view><view wx:if="{{item.count}}" class="body-main"><view><text class="body-value">{{item.latest}}</text> {{item.unit}}<view class="muted">最近一次 · {{item.latestDate}}</view></view><view><text class="body-average">{{item.average}}</text> {{item.unit}}<view class="muted">本期均值</view></view></view><view class="metric-compare">{{item.compare}}</view></view>
+    </view>
+
+    <view class="panel report-note"><view class="heading">怎样理解这份报告</view><view class="muted">“四餐均记录”只表示四个餐次都已确认，不代表营养一定完整。短期体重和腰围会受到测量时间、饮水及其他因素影响；报告不据此判断脂肪或肌肉变化。</view><button class="primary space" bindtap="goToday">去记录今天</button><button class="secondary space" bindtap="goProgress">返回打卡页</button></view>
+  </block>
+</view>

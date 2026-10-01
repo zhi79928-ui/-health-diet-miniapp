@@ -1,5 +1,5 @@
 <view class="screen">
-  <button class="primary space" bindtap="goNutrition">查看近 7 天饮食趋势 ↓</button>
+  <view class="panel weekly-entry"><view class="eyebrow">YOUR WEEK IN REVIEW</view><view class="heading space">每周饮食与身体报告</view><view class="muted">比较最近两个完整的 7 天，查看记录覆盖、营养均值、体重和腰围变化。</view><button class="primary space" bindtap="goReport">查看每周报告 →</button></view>
   <view class="visual-hero compact-hero"><image class="hero-art" src="/assets/meal-hero.jpg" mode="aspectFill" /><view class="hero-shade"></view><view class="visual-copy"><view class="eyebrow">MY LITTLE WINS</view><view class="visual-title">每一天，都算数。</view><view class="visual-sub">记录自己，无需和别人比较</view></view></view>
   <view class="panel">
     <view class="topline"><view class="heading">我的打卡日历</view><text class="badge">{{habit.done ? '今日已打卡' : '今日待打卡'}}</text></view>

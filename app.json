@@ -6,7 +6,8 @@
     "pages/foods/index",
     "pages/progress/index",
     "pages/account/index",
-    "pages/body/index"
+    "pages/body/index",
+    "pages/report/index"
   ],
   "tabBar": {
     "color": "#718078",
