@@ -11,8 +11,9 @@
       <canvas id="bodyCanvas" type="webgl" class="body-canvas" catchtouchstart="touchStart" catchtouchmove="touchMove" catchtouchend="touchEnd" catchtouchcancel="touchEnd" />
     </view>
     <view wx:if="{{renderError}}" class="notice">{{renderError}}</view>
-    <view class="gesture">拖动旋转 · 双指缩放 · 点视角恢复刻度</view>
+    <view class="gesture">{{autoRotate ? '约 20 秒匀速转一圈 · 触摸时暂停' : '自动旋转已暂停'}} · 双指缩放</view>
     <view class="views"><button class="secondary" data-angle="0" bindtap="view">正面</button><button class="secondary" data-angle="1.570796" bindtap="view">侧面</button><button class="secondary" data-angle="3.141593" bindtap="view">背面</button></view>
+    <button class="rotation-toggle" bindtap="toggleAuto">{{autoRotate ? '暂停自动旋转' : '开启自动旋转'}}</button>
   </view>
   <view class="muted">{{note}} 模型为简化中性轮廓，相同数据也可能对应不同的真实体型。</view>
   <view class="panel">

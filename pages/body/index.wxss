@@ -12,6 +12,7 @@
 .gesture { text-align:center; color:#687b6e; font-size:23rpx; margin-bottom:24rpx; }
 .views { display:flex; gap:16rpx; padding:0 24rpx; }
 .views button { flex:1; padding:15rpx 10rpx; background:white; }
+.rotation-toggle { margin:18rpx 24rpx 0; width:calc(100% - 48rpx); color:#246446; background:rgba(255,255,255,.76); border-radius:16rpx; font-size:24rpx; line-height:1.8; }
 .field { display:block; margin-top:32rpx; color:#365b47; font-size:27rpx; }
 .field input { margin-top:16rpx; background:#f5f8f4; border:2rpx solid #e1e9df; border-radius:18rpx; height:96rpx; padding:0 24rpx; font-size:30rpx; }
 .snapshot { display:block; width:100%; text-align:left; margin-top:24rpx; padding:24rpx; background:#f4f7f1; border-radius:18rpx; font-size:26rpx; line-height:1.6; }
