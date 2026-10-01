@@ -1,5 +1,6 @@
 <view class="screen">
   <view class="eyebrow">YOUR OWN PACE</view><view class="title">我的</view>
+  <view class="panel"><view class="heading">我的体型</view><view class="muted">用身高、体重和腰围生成可旋转的立体示意，保存自己的轮廓记录。</view><button class="secondary space" bindtap="goBody">查看我的体型 →</button></view>
   <view class="panel">
     <view class="account-row">
       <view class="account-icon">轻</view>

@@ -7,6 +7,7 @@ function backupTime(timestamp) {
   return `${date.getUTCFullYear()}-${pad(date.getUTCMonth() + 1)}-${pad(date.getUTCDate())} ${pad(date.getUTCHours())}:${pad(date.getUTCMinutes())}`;
 }
 Page({
+  goBody() { wx.navigateTo({ url: '/pages/body/index' }); },
   toggleAccountInfo() { this.setData({ accountInfoOpen: !this.data.accountInfoOpen }); },
   toggleReminderInfo() { this.setData({ reminderInfoOpen: !this.data.reminderInfoOpen }); },
   data: { ready: false, profile: null, agreed: false, busy: false, message: '', backupBusy: false, backupMeta: null, backupMessage: '', reminderReady: false, reminderTime: '20:30', reminderBusy: false, reminderMessage: '', reminderJob: null },
