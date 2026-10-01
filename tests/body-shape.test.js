@@ -31,3 +31,36 @@ page.touchStart({touches:[{x:10,y:10}]});page.touchMove({touches:[{x:60,y:20}]})
 page.touchStart({touches:[{x:0,y:0},{x:10,y:0}]});page.touchMove({touches:[{x:0,y:0},{x:1000,y:0}]});assert.equal(page.zoom,1.5);
 page.onUnload();assert.equal(page.ctx,null);
 console.log('body shape tests passed');
+const geometry=require('../utils/body-geometry');
+const base={height:175,weight:70,waist:78};
+function bounds(faces) {
+  const min=[Infinity,Infinity,Infinity],max=[-Infinity,-Infinity,-Infinity];
+  for(const f of faces)for(const p of f)for(let i=0;i<3;i++){min[i]=Math.min(min[i],p[i]);max[i]=Math.max(max[i],p[i]);}
+  return {min,max};
+}
+for(const height of [120,175,195,220]) {
+  const shape=geometry.create({...base,height}),box=bounds(shape);
+  assert.ok(Math.abs(box.max[1]-height/100)<1e-9,'head matches input height');
+  assert.equal(box.min[1],0,'feet stay on ground');
+  const projected=b.project(shape,0,0,1,380,590);
+  let top=Infinity,bottom=-Infinity;
+  for(const f of projected)for(const p of f.points){top=Math.min(top,p[1]);bottom=Math.max(bottom,p[1]);}
+  assert.ok(Math.abs(bottom-590*.90)<1e-6,'same screen baseline');
+  assert.ok(Math.abs((bottom-top)-height/100*590*.4)<1e-6,'height uses fixed scale');
+}
+let previousWidth=0,previousDepth=0;
+for(const cm of [40,70,78,100,150,200]) {
+  const d=geometry.dimensions({...base,waist:cm});
+  assert.ok(Math.abs(geometry.circumference(d.waistX,d.waistZ)*100-cm)<1e-9);
+  const faces=geometry.create({...base,waist:cm});
+  const ring=faces.flat().filter(p=>Math.abs(p[1]-1.75*.64)<1e-9);
+  const width=Math.max(...ring.map(p=>p[0]))-Math.min(...ring.map(p=>p[0]));
+  const depth=Math.max(...ring.map(p=>p[2]))-Math.min(...ring.map(p=>p[2]));
+  assert.ok(Math.abs(width-2*d.waistX)<1e-9 && Math.abs(depth-2*d.waistZ)<1e-9);
+  assert.ok(width>previousWidth && depth>previousDepth,'waist grows in front and side views');
+  previousWidth=width;previousDepth=depth;
+}
+const gpu=geometry.buffers(geometry.create(base));
+assert.ok(gpu.every(Number.isFinite));
+for(let i=0;i<gpu.length;i+=6){const len=Math.hypot(gpu[i+3],gpu[i+4],gpu[i+5]);assert.ok(Math.abs(len-1)<1e-5 || len===0);}
+console.log('body proportions, fixed scale, measured waist and smooth normals passed');
