@@ -28,7 +28,8 @@ Page({
         const {node,width,height}=res[0],info=wx.getWindowInfo?wx.getWindowInfo():wx.getSystemInfoSync();
         const ratio=Math.min(info.pixelRatio || 1,2);
         node.width=width*ratio;node.height=height*ratio;
-        this.stopAuto();if(this.renderer)this.renderer.dispose();
+        this.stopAuto();
+        if(this.renderer && typeof this.renderer.dispose==='function')this.renderer.dispose();
         this.canvas=node;this.renderer=renderer.create(node);this.renderer.setMesh(this.faces);this.size={width,height};
         this.setData({renderError:''});this.paint();this.startAuto();
       }catch(e){this.setData({renderError:e.message || '模型显示失败，请重新进入页面'});}
@@ -62,7 +63,9 @@ Page({
   onUnload() {
     this.closed=true;clearTimeout(this.previewTimer);this.stopAuto();
     if(this.paintFrame && this.canvas)this.canvas.cancelAnimationFrame(this.paintFrame);
-    this.paintFrame=null;if(this.renderer)this.renderer.dispose();this.renderer=null;this.ctx=null;this.faces=null;
+    this.paintFrame=null;
+    if(this.renderer && typeof this.renderer.dispose==='function')this.renderer.dispose();
+    this.renderer=null;this.ctx=null;this.faces=null;
   },
   input(e) {
     const key=e.currentTarget.dataset.field;if(!['height','weight','waist'].includes(key))return;

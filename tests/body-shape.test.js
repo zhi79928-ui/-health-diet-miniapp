@@ -43,6 +43,9 @@ page.toggleAuto();assert.equal(page.data.autoRotate,true);assert.ok(page.rotatio
 page.onHide();assert.equal(page.rotationFrame,null);
 page.onShow();assert.ok(page.rotationFrame);
 page.onUnload();assert.equal(page.ctx,null);
+// Older WeChat canvas renderers may not expose an explicit dispose hook.
+page.renderer={draw(){}};page.canvas=null;page.closed=false;
+assert.doesNotThrow(()=>page.onUnload());assert.equal(page.renderer,null);
 console.log('body shape tests passed');
 const geometry=require('../utils/body-geometry');
 const base={height:175,weight:70,waist:78};

@@ -1,6 +1,6 @@
 {
   "name": "health-diet-miniapp",
-  "version": "1.17.1",
+  "version": "1.17.2",
   "private": true,
   "description": "BMI、估算体脂与饮食结构生成微信小程序",
   "scripts": {
