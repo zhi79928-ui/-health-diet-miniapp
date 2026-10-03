@@ -51,9 +51,11 @@ Page({
       measurement = body.measurements(candidate);
       example = !(height && (weights.length || storedWeight));
     } catch (_) { measurement = { height: 175, weight: 70, waist: null }; example = true; }
-    this.previewFaces = body.mesh(measurement);
+    const saved = wx.getStorageSync('healthForm'), preferred = wx.getStorageSync('bodyModelSexV1');
+    const sex = preferred === 'female' || preferred === 'male' ? preferred : (saved && saved.sexIndex === 1 ? 'female' : 'male');
+    this.previewFaces = body.mesh({ ...measurement, sex });
     const waistLabel = measurement.waist === null ? '' : ` · 腰围 ${measurement.waist} cm`;
-    this.setData({ bodyPreviewLabel: `${example ? '示例体型 · ' : ''}${measurement.height} cm / ${measurement.weight} kg${waistLabel}` });
+    this.setData({ bodyPreviewLabel: `${example ? '示例体型 · ' : ''}${sex === 'female' ? '女性' : '男性'} · ${measurement.height} cm / ${measurement.weight} kg${waistLabel}` });
     if (this.previewRenderer) {
       try { this.previewRenderer.setMesh(this.previewFaces); this.paintBodyPreview(); }
       catch (error) { this.setData({ bodyPreviewError: error.message || '体型预览暂时无法显示' }); }

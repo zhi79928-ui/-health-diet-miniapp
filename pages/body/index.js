@@ -4,14 +4,15 @@ const waist = require('../../utils/waist');
 const renderer = require('../../utils/body-renderer');
 function label(at) { const d=new Date(at);return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')} ${String(d.getHours()).padStart(2,'0')}:${String(d.getMinutes()).padStart(2,'0')}`; }
 Page({
-  data: {height:'',weight:'',waist:'',rows:[],message:'',renderError:'',generated:false,example:true,activeLabel:'示例体型 · 175 cm / 70 kg',note:'未填写腰围时，躯干也采用默认比例。',ticks:[{cm:200,top:10},{cm:175,top:20},{cm:150,top:30},{cm:125,top:40},{cm:100,top:50},{cm:75,top:60},{cm:50,top:70},{cm:25,top:80},{cm:0,top:90}],showRuler:true,headTop:20,autoRotate:true},
+  data: {height:'',weight:'',waist:'',sex:'male',rows:[],message:'',renderError:'',generated:false,example:true,activeLabel:'示例体型 · 175 cm / 70 kg',note:'未填写腰围时，躯干也采用默认比例。',ticks:[{cm:200,top:10},{cm:175,top:20},{cm:150,top:30},{cm:125,top:40},{cm:100,top:50},{cm:75,top:60},{cm:50,top:70},{cm:25,top:80},{cm:0,top:90}],showRuler:true,headTop:20,autoRotate:true},
   onLoad() {
     this.closed=false;this.hidden=false;this.interacting=false;this.yaw=-.35;this.pitch=0;this.zoom=1;
-    this.faces=body.mesh({height:175,weight:70,waist:''});
+    this.faces=body.mesh({height:175,weight:70,waist:'',sex:'male'});
     try {
       const saved=wx.getStorageSync('healthForm'),weights=tracker.readWeights(),waists=waist.read();
       const f=saved && saved.form || {};
-      this.setData({height:f.heightCm || '',weight:weights.length?weights[weights.length-1].kg:(f.weight?Number(f.weight)/(saved.weightUnit==='kg'?1:2):''),waist:waists.length?waists[waists.length-1].cm:''});
+      const preferred=wx.getStorageSync('bodyModelSexV1'),sex=preferred==='female'||preferred==='male'?preferred:(saved&&saved.sexIndex===1?'female':'male');
+      this.setData({sex,height:f.heightCm || '',weight:weights.length?weights[weights.length-1].kg:(f.weight?Number(f.weight)/(saved.weightUnit==='kg'?1:2):''),waist:waists.length?waists[waists.length-1].cm:''});
       this.refreshRows();
       if(this.data.height && this.data.weight) this.updateModel();
     } catch(e) {this.setData({message:e.message || '读取本机数据失败，可手动填写'});}
@@ -73,11 +74,15 @@ Page({
     this.setData({[key]:e.detail.value,message:'修改中，预览将在输入有效后更新。'});
     clearTimeout(this.previewTimer);this.previewTimer=setTimeout(()=>{if(!this.closed)this.updateModel();},400);
   },
+  setSex(e) {
+    const sex=e.currentTarget.dataset.sex;if(sex!=='male'&&sex!=='female')return;
+    wx.setStorageSync('bodyModelSexV1',sex);this.setData({sex});this.updateModel();
+  },
   updateModel() {
     this.stopAuto();
     try {
       clearTimeout(this.previewTimer);
-      const m=body.measurements(this.data);this.faces=body.mesh(m);this.applied=m;
+      const m=body.measurements(this.data);this.faces=body.mesh({...m,sex:this.data.sex});this.applied=m;
       if(this.renderer)this.renderer.setMesh(this.faces);
       this.setData({example:false,generated:true,message:'',headTop:90-m.height*.4,activeLabel:`${m.height} cm / ${m.weight} kg${m.waist===null?'':` / 腰围 ${m.waist} cm`}`,note:m.waist===null?'未填写腰围：躯干和四肢均采用默认比例。':'腰围按测量值调整腰部宽度与厚度；肩、臀和四肢仍是默认比例。'});this.paint();this.startAuto(3000);return true;
     }catch(e){this.setData({message:e.message});this.startAuto(3000);return false;}

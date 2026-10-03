@@ -15,6 +15,7 @@ for(const m of [a,{height:120,weight:30,waist:40},{height:220,weight:250,waist:2
 }
 assert.notDeepStrictEqual(b.mesh({...a,waist:100}),mesh);
 assert.notDeepStrictEqual(b.mesh({...a,weight:95}),mesh);
+assert.notDeepStrictEqual(b.mesh({...a,sex:'female'}),b.mesh({...a,sex:'male'}));
 for(let i=0;i<35;i++)b.save(a,i);
 assert.equal(b.read().length,30);assert.equal(b.read()[0].at,34);
 assert.deepStrictEqual(Object.keys(storage),['bodyShapeHistoryV1']);
@@ -27,6 +28,7 @@ wx.pageScrollTo=()=>{};page.onLoad();assert.equal(page.data.weight,77);assert.eq
 page.save();assert.equal(page.data.rows.length,1);
 page.input({currentTarget:{dataset:{field:'weight'}},detail:{value:'90'}});page.updateModel();assert.equal(page.applied.weight,90);
 page.loadSnapshot({currentTarget:{dataset:{index:0}}});assert.equal(page.applied.weight,77);
+page.setSex({currentTarget:{dataset:{sex:'female'}}});assert.equal(page.data.sex,'female');assert.equal(storage.bodyModelSexV1,'female');
 page.touchStart({touches:[{x:10,y:10}]});page.touchMove({touches:[{x:60,y:20}]});assert.notEqual(page.yaw,-.25);
 page.touchStart({touches:[{x:0,y:0},{x:10,y:0}]});page.touchMove({touches:[{x:0,y:0},{x:1000,y:0}]});assert.equal(page.zoom,1.5);
 page.touchEnd({touches:[]});
@@ -78,5 +80,7 @@ for(const cm of [40,70,78,100,150,200]) {
 }
 const gpu=geometry.buffers(geometry.create(base));
 assert.ok(gpu.every(Number.isFinite));
-for(let i=0;i<gpu.length;i+=6){const len=Math.hypot(gpu[i+3],gpu[i+4],gpu[i+5]);assert.ok(Math.abs(len-1)<1e-5 || len===0);}
+assert.equal(gpu.length%7,0);
+for(let i=0;i<gpu.length;i+=7){const len=Math.hypot(gpu[i+3],gpu[i+4],gpu[i+5]);assert.ok(Math.abs(len-1)<1e-5 || len===0);assert.ok(gpu[i+6]>=0&&gpu[i+6]<=3);}
+const shader=require('../utils/body-renderer');assert.ok(shader.VERTEX.includes('aRegion'));assert.ok(shader.FRAGMENT.includes('uHeight'));
 console.log('body proportions, fixed scale, measured waist and smooth normals passed');

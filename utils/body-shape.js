@@ -22,7 +22,10 @@ function save(input, at = Date.now()) {
   wx.setStorageSync(KEY, rows);
   return rows;
 }
-function mesh(input) { return require('./body-geometry').create(measurements(input)); }
+function mesh(input) {
+  const sex = input && input.sex === 'female' ? 'female' : 'male';
+  return require('./body-geometry').create({ ...measurements(input), sex });
+}
 function project(faces, yaw, pitch, zoom, width, height) {
   const cy=Math.cos(yaw), sy=Math.sin(yaw), cp=Math.cos(pitch), sp=Math.sin(pitch);
   const scale=height*.4*zoom;

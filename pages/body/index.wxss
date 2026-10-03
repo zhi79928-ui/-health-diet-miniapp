@@ -10,6 +10,9 @@
 .head-guide { position:absolute; left:84rpx; right:40rpx; border-top:1rpx dashed #b5bbaa; z-index:1; }
 .floor { position:absolute; top:88%; left:24%; width:52%; height:4%; border-radius:50%; background:radial-gradient(ellipse,rgba(66,61,48,.19),rgba(66,61,48,0) 70%); }
 .gesture { text-align:center; color:#687b6e; font-size:23rpx; margin-bottom:24rpx; }
+.sex-switch { display:flex; gap:12rpx; margin:22rpx 24rpx 14rpx; padding:8rpx; border-radius:18rpx; background:rgba(255,255,255,.58); }
+.sex-switch button { flex:1; padding:13rpx 10rpx; border-radius:14rpx; background:transparent; color:#62766a; font-size:23rpx; line-height:1.7; }
+.sex-switch button.selected { color:#fff; background:#27694b; }
 .views { display:flex; gap:16rpx; padding:0 24rpx; }
 .views button { flex:1; padding:15rpx 10rpx; background:white; }
 .rotation-toggle { margin:18rpx 24rpx 0; width:calc(100% - 48rpx); color:#246446; background:rgba(255,255,255,.76); border-radius:16rpx; font-size:24rpx; line-height:1.8; }
