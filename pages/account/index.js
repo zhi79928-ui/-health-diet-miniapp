@@ -1,6 +1,10 @@
 const account = require('../../utils/account');
 const accountBackup = require('../../utils/account-backup');
 const reminders = require('../../utils/reminders');
+const body = require('../../utils/body-shape');
+const bodyRenderer = require('../../utils/body-renderer');
+const tracker = require('../../utils/tracker');
+const waist = require('../../utils/waist');
 function backupTime(timestamp) {
   if (!Number.isFinite(timestamp)) return '';
   const date = new Date(timestamp + 8 * 60 * 60 * 1000), pad = value => String(value).padStart(2, '0');
@@ -10,14 +14,97 @@ Page({
   goBody() { wx.navigateTo({ url: '/pages/body/index' }); },
   toggleAccountInfo() { this.setData({ accountInfoOpen: !this.data.accountInfoOpen }); },
   toggleReminderInfo() { this.setData({ reminderInfoOpen: !this.data.reminderInfoOpen }); },
-  data: { ready: false, profile: null, agreed: false, busy: false, message: '', backupBusy: false, backupMeta: null, backupMessage: '', reminderReady: false, reminderTime: '20:30', reminderBusy: false, reminderMessage: '', reminderJob: null },
+  data: { ready: false, profile: null, agreed: false, busy: false, message: '', backupBusy: false, backupMeta: null, backupMessage: '', reminderReady: false, reminderTime: '20:30', reminderBusy: false, reminderMessage: '', reminderJob: null, bodyPreviewLabel: '示例体型 · 175 cm / 70 kg', bodyPreviewError: '' },
+  onLoad() {
+    this.previewClosed = false;
+    this.previewHidden = false;
+    this.previewYaw = -.35;
+    this.refreshBodyPreview();
+  },
+  onReady() { this.setupBodyPreview(); },
   onShow() {
+    this.previewHidden = false;
+    this.refreshBodyPreview();
+    this.startBodyPreview();
     const profile = account.current();
     this.setData({ backupHint: profile ? accountBackup.status(profile.accountId, this.data.backupMeta) : '' });
     this.setData({ ready: account.available(), profile, reminderReady: reminders.ready() });
     if (profile) this.refreshBackup();
     try { this.setData({ reminderTime: reminders.preference().time }); } catch (error) { this.setData({ reminderMessage: error.message }); }
     this.refreshReminder();
+  },
+  onHide() { this.previewHidden = true; this.stopBodyPreview(); },
+  onUnload() {
+    this.previewClosed = true;
+    this.stopBodyPreview();
+    if (this.previewRenderer && typeof this.previewRenderer.dispose === 'function') this.previewRenderer.dispose();
+    this.previewRenderer = null;
+    this.previewCanvas = null;
+    this.previewFaces = null;
+  },
+  refreshBodyPreview() {
+    let measurement = { height: 175, weight: 70, waist: null }, example = true;
+    try {
+      const saved = wx.getStorageSync('healthForm'), weights = tracker.readWeights(), waists = waist.read(), form = saved && saved.form || {};
+      const height = Number(form.heightCm), storedWeight = form.weight === '' || form.weight == null ? NaN : Number(form.weight) / (saved && saved.weightUnit === 'kg' ? 1 : 2);
+      const candidate = { height: height || 175, weight: weights.length ? weights[weights.length - 1].kg : (storedWeight || 70), waist: waists.length ? waists[waists.length - 1].cm : '' };
+      measurement = body.measurements(candidate);
+      example = !(height && (weights.length || storedWeight));
+    } catch (_) { measurement = { height: 175, weight: 70, waist: null }; example = true; }
+    this.previewFaces = body.mesh(measurement);
+    const waistLabel = measurement.waist === null ? '' : ` · 腰围 ${measurement.waist} cm`;
+    this.setData({ bodyPreviewLabel: `${example ? '示例体型 · ' : ''}${measurement.height} cm / ${measurement.weight} kg${waistLabel}` });
+    if (this.previewRenderer) {
+      try { this.previewRenderer.setMesh(this.previewFaces); this.paintBodyPreview(); }
+      catch (error) { this.setData({ bodyPreviewError: error.message || '体型预览暂时无法显示' }); }
+    }
+  },
+  setupBodyPreview() {
+    wx.createSelectorQuery().in(this).select('#accountBodyCanvas').fields({ node: true, size: true }).exec(result => {
+      if (this.previewClosed) return;
+      try {
+        if (!result[0] || !result[0].node) throw new Error('当前设备无法显示立体预览');
+        const { node, width, height } = result[0], info = wx.getWindowInfo ? wx.getWindowInfo() : wx.getSystemInfoSync(), ratio = Math.min(info.pixelRatio || 1, 2);
+        node.width = width * ratio; node.height = height * ratio;
+        this.stopBodyPreview();
+        if (this.previewRenderer && typeof this.previewRenderer.dispose === 'function') this.previewRenderer.dispose();
+        this.previewCanvas = node;
+        this.previewSize = { width, height };
+        this.previewRenderer = bodyRenderer.create(node);
+        this.previewRenderer.setMesh(this.previewFaces || body.mesh({ height: 175, weight: 70, waist: '' }));
+        this.setData({ bodyPreviewError: '' });
+        this.paintBodyPreview();
+        this.startBodyPreview();
+      } catch (error) { this.setData({ bodyPreviewError: error.message || '体型预览暂时无法显示' }); }
+    });
+  },
+  paintBodyPreview() {
+    if (!this.previewRenderer || !this.previewSize) return;
+    try { this.previewRenderer.draw(this.previewYaw, 0, 1, this.previewSize.width, this.previewSize.height); }
+    catch (error) { this.stopBodyPreview(); this.setData({ bodyPreviewError: error.message || '体型预览暂时无法显示' }); }
+  },
+  stopBodyPreview() {
+    this.previewLastFrame = null;
+    if (this.previewFrame && this.previewCanvas) this.previewCanvas.cancelAnimationFrame(this.previewFrame);
+    this.previewFrame = null;
+  },
+  startBodyPreview() {
+    this.stopBodyPreview();
+    if (this.previewClosed || this.previewHidden || !this.previewCanvas || !this.previewRenderer) return;
+    const rotate = timestamp => {
+      this.previewFrame = null;
+      if (this.previewClosed || this.previewHidden || !this.previewCanvas || !this.previewRenderer) return;
+      const now = Number.isFinite(timestamp) ? timestamp : Date.now();
+      if (this.previewLastFrame === null) this.previewLastFrame = now;
+      else if (now - this.previewLastFrame >= 45) {
+        const elapsed = Math.min(120, Math.max(0, now - this.previewLastFrame));
+        this.previewYaw = (this.previewYaw + elapsed * Math.PI * 2 / 24000) % (Math.PI * 2);
+        this.previewLastFrame = now;
+        this.paintBodyPreview();
+      }
+      this.previewFrame = this.previewCanvas.requestAnimationFrame(rotate);
+    };
+    this.previewFrame = this.previewCanvas.requestAnimationFrame(rotate);
   },
   async refreshBackup() {
     try {
