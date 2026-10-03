@@ -1,7 +1,7 @@
 <view class="screen">
   <view class="eyebrow">MY BODY · MY PACE</view>
   <view class="title">用另一种方式，看见自己</view>
-  <view class="muted">体型示意，非真实扫描。不能据此判断体脂或肌肉量。</view>
+  <view class="muted">真人连续网格示意，非本人扫描。不能据此判断体脂或肌肉量。</view>
   <view class="model-card">
     <view class="model-label">{{activeLabel}}</view>
     <view class="stage">
@@ -16,7 +16,7 @@
     <view class="views"><button class="secondary" data-angle="0" bindtap="view">正面</button><button class="secondary" data-angle="1.570796" bindtap="view">侧面</button><button class="secondary" data-angle="3.141593" bindtap="view">背面</button></view>
     <button class="rotation-toggle" bindtap="toggleAuto">{{autoRotate ? '暂停自动旋转' : '开启自动旋转'}}</button>
   </view>
-  <view class="muted">{{note}} 模型为简化中性轮廓，相同数据也可能对应不同的真实体型。</view>
+  <view class="muted">{{note}} 未测量部位采用真人底模的默认比例，相同数据也可能对应不同的真实体型。</view>
   <view class="panel">
     <view class="heading">你的身体数据</view>
     <view class="muted">输入有效数值后自动预览：身高改变高矮，体重影响整体丰满度，腰围改变腰腹宽度与厚度。默认视角保持同一比例，方便比较。</view>
