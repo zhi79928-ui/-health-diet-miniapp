@@ -21,7 +21,7 @@ assert.deepStrictEqual([day.meals[0].protein,day.meals[0].carbs,day.meals[0].fat
 assert.equal(day.consumed.protein,0);
 day = toggleMeal(day,0); assert.equal(day.consumed.protein,18.8);
 saveDay(day); assert.equal(refreshDay(readDays()[dateKey()]).consumed.carbs,44.9);
-assert.throws(() => setLabelFood(day,0,0,label,300), /已经记录/);
+day = setLabelFood(day,0,0,label,300); assert.equal(day.meals[0].logged,true); assert.equal(day.consumed.protein,day.meals[0].protein);
 day = toggleMeal(day,0); day = setLabelFood(day,0,0,label,300); saveDay(day);
 assert.equal(readDays()[dateKey()].meals[0].foods[0].basis.protein,3);
 const copied = copyPlan(day,'2025-01-01'); assert.equal(copied.diaryOnly,true); assert.equal(copied.meals[0].logged,false);
@@ -39,6 +39,6 @@ fail=true; screen.applyEditor(); assert.equal(screen.data.day.meals[0].foods[0].
 fail=false; screen.applyEditor(); assert.equal(screen.data.day.meals[0].foods[0].id,'labelFood');
 screen.toggleMeal(tap({meal:'0'})); screen.completeCheckin(); assert.equal(screen.data.habit.done,true);
 const reopened=page(); reopened.onShow(); assert.equal(reopened.data.day.meals[0].foods[0].protein,9);
-reopened.toggleMeal(tap({meal:'0'})); reopened.openEditor(tap({meal:'0',food:'0'})); assert.equal(reopened.data.editor.custom,true);
+reopened.openEditor(tap({meal:'0',food:'0'})); assert.equal(reopened.data.editor.custom,true); assert.equal(reopened.data.editor.wasLogged,true);
 reopened.onLabelUnit(tap({unit:'mL'})); assert.equal(reopened.data.editor.grams,''); assert.equal(reopened.data.editor.preview,null);
 console.log('Food diary: gram arithmetic, label units, blank meals, search, persistence, check-ins and failure recovery passed');

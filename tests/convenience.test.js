@@ -14,7 +14,7 @@ foods[0].grams=10;assert.equal(readFavorites()[0].foods[0].grams,300);
 const favorite=readFavorites()[0];let day=applyFavorite(createDiary(dateKey()),0,favorite);
 assert.equal(day.meals[0].protein,18.8);assert.equal(day.meals[0].logged,false);
 day=applyFavorite(day,0,favorite);assert.equal(day.meals[0].foods.length,4); // Explicitly append, never overwrite.
-assert.throws(()=>applyFavorite(toggleMeal(day,0),0,favorite),/已记录/);
+const loggedFavorite=applyFavorite(toggleMeal(day,0),0,favorite);assert.equal(loggedFavorite.meals[0].logged,true);assert.equal(loggedFavorite.meals[0].foods.length,6);
 const custom=labelPortion({name:'我的饮料',state:'即饮',unit:'mL',protein:'3',carbs:'2',fat:'1',calories:''},250);
 saveFavorite('饮料',[custom],'food');const drink=readFavorites()[0];assert.equal(applyFavorite(createDiary(dateKey()),1,drink).meals[1].foods[0].unit,'mL');
 fail=true;assert.throws(()=>saveFavorite('另一个',[custom],'food'));assert.equal(readFavorites().length,2);assert.throws(()=>deleteFavorite(drink.id));fail=false;

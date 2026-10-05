@@ -1,6 +1,7 @@
 const { FOODS, foodPortion, sumNutrition, withFiber } = require('./foods');
 const { labelPortion, validLabelRow } = require('./label-foods');
 const { cookingGuide } = require('./cooking');
+const { portionAlerts, mealAlerts, dayAlerts } = require('./nutrition-alerts');
 const KEYS = ['calories', 'protein', 'carbs', 'fat'];
 const r1 = n => Math.round((n + Number.EPSILON) * 10) / 10;
 const copy = value => JSON.parse(JSON.stringify(value));
@@ -33,7 +34,15 @@ function checkDay(day) {
 function refreshDay(day) {
   checkDay(day);
   const result = copy(day);
-  result.meals = result.meals.map((meal, mealIndex) => ({ ...meal, foods: meal.foods.map((food, i) => ({ ...withFiber(food), rowKey: `${mealIndex}-${i}`, cookingLabel: cookingGuide(food).methods.map(method => method.label).join(' / ') || '查看称重说明' })), ...sumNutrition(meal.foods) }));
+  result.meals = result.meals.map((meal, mealIndex) => {
+    const foods = meal.foods.map((food, i) => {
+      const clean = withFiber(food);
+      return { ...clean, rowKey: `${mealIndex}-${i}`, cookingLabel: cookingGuide(food).methods.map(method => method.label).join(' / ') || '查看称重说明', alerts: portionAlerts(clean) };
+    });
+    const clean = { ...meal, foods, ...sumNutrition(foods) };
+    clean.alerts = mealAlerts(clean);
+    return clean;
+  });
   result.planned = sumNutrition(result.meals);
   result.consumed = sumNutrition(result.meals.filter(meal => meal.logged));
   result.completed = result.meals.filter(meal => meal.logged).length;
@@ -43,6 +52,18 @@ function refreshDay(day) {
     percent: result.target[key] > 0 ? Math.min(100, Math.round(result.consumed[key] / result.target[key] * 100)) : 0,
     delta: r1(result.planned[key] - result.target[key])
   }));
+  const nextMealIndex = result.meals.findIndex(meal => !meal.logged);
+  result.dashboard = {
+    calorieTarget: result.diaryOnly ? null : result.target.calories,
+    calorieRemaining: result.diaryOnly ? null : r1(Math.max(0, result.target.calories - result.consumed.calories)),
+    proteinTarget: result.diaryOnly ? null : result.target.protein,
+    proteinRemaining: result.diaryOnly ? null : r1(Math.max(0, result.target.protein - result.consumed.protein)),
+    fiberTarget: 25,
+    fiberRemaining: r1(Math.max(0, 25 - result.consumed.fiber)),
+    nextMealIndex,
+    nextMealName: nextMealIndex < 0 ? '今天的餐次均已记录' : result.meals[nextMealIndex].name
+  };
+  result.alerts = dayAlerts(result);
   return result;
 }
 function createDay(profile, date, oldDay) {
@@ -60,7 +81,7 @@ function createDiary(date) {
   return refreshDay({ date, diaryOnly: true, target: { calories: 0, protein: 0, carbs: 0, fat: 0 }, goal: '我的饮食记录', warnings: [], meals: ['早餐', '午餐', '加餐', '晚餐'].map(name => ({ name, logged: false, foods: [] })) });
 }
 function setLabelFood(day, mealIndex, foodIndex, form, grams) {
-  const next = editableMeal(day, mealIndex), row = labelPortion(form, grams);
+  const next = editableMeal(day, mealIndex, true), row = labelPortion(form, grams);
   if (foodIndex === null) {
     if (next.meals[mealIndex].foods.length >= 40) throw new Error('每餐最多 40 项食物');
     next.meals[mealIndex].foods.push(row);
@@ -70,28 +91,29 @@ function setLabelFood(day, mealIndex, foodIndex, form, grams) {
   }
   return refreshDay(next);
 }
-function editableMeal(day, mealIndex) {
+function editableMeal(day, mealIndex, allowLogged = false) {
   checkDay(day);
   if (!Number.isInteger(mealIndex) || !day.meals[mealIndex]) throw new Error('请选择有效餐次');
-  if (day.meals[mealIndex].logged) throw new Error('这餐已经记录，请先取消记录再修改实际食物');
+  if (day.meals[mealIndex].logged && !allowLogged) throw new Error('这餐已经记录，不能整餐替换');
   return copy(day);
 }
 function replaceFood(day, mealIndex, foodIndex, id, grams) {
-  const result = editableMeal(day, mealIndex);
+  const result = editableMeal(day, mealIndex, true);
   if (!Number.isInteger(foodIndex) || !result.meals[mealIndex].foods[foodIndex]) throw new Error('请选择有效食物');
   result.meals[mealIndex].foods[foodIndex] = foodPortion(id, grams);
   return refreshDay(result);
 }
 function addFood(day, mealIndex, id, grams) {
-  const result = editableMeal(day, mealIndex);
+  const result = editableMeal(day, mealIndex, true);
   if (result.meals[mealIndex].foods.length >= 40) throw new Error('每餐最多 40 项食物');
   result.meals[mealIndex].foods.push(foodPortion(id, grams));
   return refreshDay(result);
 }
 function removeFood(day, mealIndex, foodIndex) {
-  const result = editableMeal(day, mealIndex);
+  const result = editableMeal(day, mealIndex, true);
   if (!Number.isInteger(foodIndex) || !result.meals[mealIndex].foods[foodIndex]) throw new Error('请选择有效食物');
   result.meals[mealIndex].foods.splice(foodIndex, 1);
+  if (!result.meals[mealIndex].foods.length) result.meals[mealIndex].logged = false;
   return refreshDay(result);
 }
 function toggleMeal(day, mealIndex) {

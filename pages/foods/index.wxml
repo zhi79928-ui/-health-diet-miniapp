@@ -40,6 +40,7 @@
         <view class="food-title">{{item.name}} <text class="weight-badge">{{item.state}}</text></view>
         <view class="food-nutrients">{{item.calories}} kcal · 蛋白 {{item.protein}} g · 碳水 {{item.carbs}} g · 脂肪 {{item.fat}} g</view><view class="food-nutrients">膳食纤维：{{item.fiberLabel}}</view>
         <view class="food-note">{{item.note}}</view>
+        <view class="food-note">来源：{{item.sourceLabel}} · {{item.sourceId}}</view>
         <button size="mini" class="source-link" data-id="{{item.id}}" bindtap="copyFoodSource">复制数据来源</button>
       </view>
     </view>

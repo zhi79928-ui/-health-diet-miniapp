@@ -6,7 +6,7 @@ const { PRODUCE } = require('./produce');
 const FOODS = {
   ...PRODUCE,
   ...STAPLES,
-  soyMilk: { name: '无糖豆浆（通用参考）', state: '即饮净重', note: '浓度、品牌及过滤方式会影响营养；此条目为通用估算。克数不等同毫升。参考：en.wikipedia.org/wiki/Soy_milk 的每 100 g 营养表', calories: 33, protein: 2.9, carbs: 1.7, fat: 1.6, sourceId: 'soy-milk-generic' },
+  soyMilk: { name: '无糖豆浆（通用参考）', state: '即饮净重', note: '浓度、品牌及过滤方式会影响营养；此条目为通用估算。克数不等同毫升，有包装时优先按标签录入。', calories: 33, protein: 2.9, carbs: 1.7, fat: 1.6, fiber: 0.6, sourceId: 'soy-milk-generic', sourceUrl: 'https://en.wikipedia.org/wiki/Soy_milk' },
   ...EXTRA_FOODS,
   chickenRaw: { name: '去皮去骨鸡胸肉', state: '生重', note: '烹调前去皮去骨称重；需充分做熟后食用', calories: 120, protein: 22.5, carbs: 0, fat: 2.6, sourceId: '171077' },
   chickenCooked: { name: '烤鸡胸肉（纯肉）', state: '熟重', note: '烤熟后去皮去骨称重；额外用油另计，不通用于水煮、油炸或腌制品', calories: 165, protein: 31, carbs: 0, fat: 3.6, sourceId: '171477' },
@@ -41,11 +41,16 @@ const fiberBySource = {
   173627: 0, 172388: 0, 173625: 0, 173612: 0, 172393: 0, 171496: 0,
   167904: 0, 167895: 0, 167897: 0, 174330: 0, 174331: 0, 175167: 0,
   175168: 0, 173706: 0, 173707: 0, 175176: 0, 175177: 0, 171077: 0,
-  171477: 0, 173382: 0, 173381: 0, 167902: 0, 167903: 0, 171955: 0,
+  175179: 0, 175180: 0, 171477: 0, 173382: 0, 173381: 0, 167902: 0, 167903: 0, 171955: 0,
   171956: 0, 171265: 0, 171413: 0
 };
 Object.values(FOODS).forEach(food => {
   if (Object.prototype.hasOwnProperty.call(fiberBySource, food.sourceId)) food.fiber = fiberBySource[food.sourceId];
+  const id = String(food.sourceId || '');
+  if (!food.sourceUrl && /^\d+$/.test(id)) food.sourceUrl = `https://fdc.nal.usda.gov/food-details/${id}/nutrients`;
+  if (!food.sourceLabel) food.sourceLabel = id.startsWith('CFS-') ? '香港食物安全中心' : id === 'soy-milk-generic' ? '通用参考值' : 'USDA 食物数据库';
+  if (!food.sourceDescription) food.sourceDescription = `${food.name}（${food.state}）每 100 g 可食部`;
+  food.measurement = /生重/.test(food.state) ? 'raw' : /(熟重|水煮|烤制|干热|焖熟|煮熟)/.test(food.state) ? 'cooked' : 'ready';
 });
 FOODS.apple.category = 'fruits';
 FOODS.broccoli.category = 'vegetables';
@@ -53,7 +58,10 @@ function withFiber(row) {
   const basis = FOODS[row.id];
   const fiber = Number.isFinite(row.fiber) && row.fiber >= 0 ? row.fiber :
     (!row.basis && basis && Number.isFinite(basis.fiber) && Number.isFinite(row.grams) ? round1(basis.fiber * row.grams / 100) : null);
-  return { ...row, fiber, fiberLabel: fiber === null ? '暂无数据' : fiber + ' g' };
+  return { ...row,
+    sourceId: row.sourceId || (basis && basis.sourceId), sourceLabel: row.sourceLabel || (basis && basis.sourceLabel),
+    sourceUrl: row.sourceUrl || (basis && basis.sourceUrl), sourceDescription: row.sourceDescription || (basis && basis.sourceDescription),
+    measurement: row.measurement || (basis && basis.measurement), fiber, fiberLabel: fiber === null ? '暂无数据' : fiber + ' g' };
 }
 
 function foodPortion(id, grams) {

@@ -10,6 +10,13 @@
 .guide-step > view { flex: 1; min-width: 0; }
 .intake-energy { margin: 20rpx 0; color: #19684a; }
 .intake-energy > text { font-size: 60rpx; font-weight: 700; }
+.intake-energy .target-energy { font-size: 30rpx; color: #718078; font-weight: 500; }
+.dashboard-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 18rpx; margin: 24rpx 0; }
+.dashboard-grid > view { padding: 24rpx; border-radius: 20rpx; background: #f3f7ef; }
+.dashboard-value { display: block; color: #176843; font-size: 32rpx; font-weight: 750; }
+.next-meal-card { display: flex; align-items: center; justify-content: space-between; gap: 20rpx; margin-top: 26rpx; padding: 24rpx; border-radius: 20rpx; background: #edf5ef; }
+.next-meal-card > view { flex: 1; min-width: 0; }
+.compact-notice { padding: 18rpx 20rpx; margin: 18rpx 0 0; }
 .meal-shortcuts { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 18rpx; margin: 30rpx 0; }
 .meal-shortcut { width: 100%; margin: 0; padding: 22rpx 10rpx; background: #f3f6f2; color: #52685b; font-size: 28rpx; line-height: 1.8; }
 .meal-shortcut text { font-size: 24rpx; }

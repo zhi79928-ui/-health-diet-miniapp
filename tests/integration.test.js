@@ -37,7 +37,8 @@ today.toggleMeal(tap({ meal: '0' })); assert.strictEqual(today.data.day.complete
 const breakfast = JSON.stringify(today.data.day.meals[0]);
 plan.onGoalChange(ev('3')); plan.calculate(); plan.saveTodayPlan(); today.onShow();
 assert.strictEqual(JSON.stringify(today.data.day.meals[0]), breakfast);
-today.openEditor(tap({ meal: '0', food: '0' })); assert.ok(lastToast.includes('取消记录'));
+today.openEditor(tap({ meal: '0', food: '0' })); assert.ok(today.data.editor && today.data.editor.wasLogged);
+today.onSwapGrams(ev('55')); today.applyEditor(); assert.strictEqual(today.data.day.meals[0].logged, true); assert.ok(lastToast.includes('更新当天'));
 today.openEditor(tap({ meal: '1', food: '1' })); today.onSwapMode(ev('0'));
 today.onSwapFood(ev(String(today.data.foodOptions.findIndex(item => item.id === 'beefCooked'))));
 assert.ok(today.data.editor.preview && !today.data.editor.error);

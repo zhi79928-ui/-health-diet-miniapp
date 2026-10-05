@@ -10,7 +10,7 @@ assert.equal(foodPortion('choySum', 200).fiber, 3);
 assert.equal(foodPortion('broccoliBoiled', 100).fiber, 3.3);
 assert.notEqual(FOODS.broccoli.fiber, FOODS.broccoliBoiled.fiber);
 assert.equal(foodPortion('chickenRaw', 100).fiber, 0);
-assert.equal(foodPortion('soyMilk', 100).fiber, null);
+assert.equal(foodPortion('soyMilk', 100).fiber, 0.6);
 let day = addFood(createDiary('2026-09-22'), 0, 'banana', 150);
 day = addFood(day, 0, 'choySum', 200);
 assert.equal(day.planned.fiber, 6.9);

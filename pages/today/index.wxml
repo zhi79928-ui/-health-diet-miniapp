@@ -9,6 +9,21 @@
     <view class="muted space">免登录也能记录。数据默认保存在本机，登录后到“我的”手动备份；换设备或清缓存前先备份。</view>
     <button class="primary space" bindtap="closeGuide">知道了，开始记录</button>
   </view>
+  <view class="topline"><view><view class="eyebrow">ONE MEAL AT A TIME</view><view class="title">今天，吃得明白</view></view><picker mode="date" value="{{selectedDate}}" end="{{today}}" bindchange="onDateChange"><view class="date-pill">{{selectedDate}} ▾</view></picker></view>
+  <view wx:if="{{error}}" class="notice">{{error}}</view>
+  <view wx:if="{{day}}" class="panel daily-overview">
+    <view class="topline"><view class="heading">{{selectedDate === today ? '今日进度' : '所选日期进度'}}</view><text class="badge">{{day.completed}} / 4 餐已记录</text></view>
+    <view class="intake-energy"><text>{{day.consumed.calories}}</text><text wx:if="{{day.dashboard.calorieTarget}}" class="target-energy"> / {{day.dashboard.calorieTarget}}</text> kcal</view>
+    <view class="dashboard-grid">
+      <view><text class="dashboard-value">{{day.consumed.protein}} g</text><text class="muted">蛋白{{day.dashboard.proteinTarget ? ' · 还差 ' + day.dashboard.proteinRemaining + ' g' : ''}}</text></view>
+      <view><text class="dashboard-value">{{day.consumed.fiber}} g</text><text class="muted">纤维 · 距一般参考 25 g 还差 {{day.dashboard.fiberRemaining}} g</text></view>
+    </view>
+    <view wx:if="{{day.dashboard.calorieTarget}}" class="muted">参考热量还差 {{day.dashboard.calorieRemaining}} kcal；差额只用于对照，不需要为了填满进度强行进食。</view>
+    <view class="next-meal-card"><view><view class="strong">下一餐：{{day.dashboard.nextMealName}}</view><view class="muted">根据已经记录的摄入，查看可调整克数的搭配参考。</view></view><button wx:if="{{selectedDate === today && day.dashboard.nextMealIndex >= 0}}" size="mini" class="small-button" bindtap="openRecommendation">帮我搭配</button></view>
+    <view wx:for="{{day.alerts}}" wx:key="*this" class="notice compact-notice">{{item}}</view>
+    <view class="meal-shortcuts"><button wx:for="{{day.meals}}" wx:key="name" class="meal-shortcut {{item.logged ? 'recorded' : ''}}" data-meal="{{index}}" bindtap="jumpMeal"><view>{{item.name}}</view><text>{{item.logged ? '已记录 ✓' : '去记录 ↓'}}</text></button></view>
+    <view class="muted">只合计已记录餐次。未记录不代表没吃，4 餐也不是打卡门槛。</view>
+  </view>
   <view id="daily-checkin" class="panel habit-panel">
     <view class="topline"><view class="heading">今日打卡</view><text class="badge">连续 {{habit.streak || 0}} 天</text></view>
     <view class="muted">{{today}} · 完成任意一项后，主动打卡。无需每天称重。</view>
@@ -16,21 +31,6 @@
     <view wx:if="{{habitError}}" class="notice">{{habitError}}</view>
     <button class="primary" disabled="{{habit.done || habitError || (tasks.meals ? false : !tasks.weight)}}" bindtap="completeCheckin">{{habit.done ? '✓ 今日已打卡，明天继续' : '完成今日打卡'}}</button>
     <view class="topline space"><text class="muted">累计 {{habit.total || 0}} 天，每一步都算数</text><button size="mini" class="small-button" bindtap="goProgress">打卡日历 →</button></view>
-  </view>
-  <view class="topline"><view><view class="eyebrow">ONE MEAL AT A TIME</view><view class="title">今天，吃得明白</view></view><picker mode="date" value="{{selectedDate}}" end="{{today}}" bindchange="onDateChange"><view class="date-pill">{{selectedDate}} ▾</view></picker></view>
-  <view wx:if="{{error}}" class="notice">{{error}}</view>
-  <view wx:if="{{selectedDate === today}}" class="panel recommend-entry">
-    <view class="heading">下一餐，还没想好吃什么？</view>
-    <view class="muted">参考今天已记录的饮食，给你三套食材搭配；份量可再按实际情况调整。</view>
-    <button class="primary space" bindtap="openRecommendation">帮我搭配下一餐</button>
-  </view>
-  <view wx:if="{{day}}" class="panel daily-overview">
-    <view class="topline"><view class="heading">{{selectedDate === today ? '今日已吃合计' : '所选日期已吃合计'}}</view><text class="badge">{{day.completed}} / 4 餐已记录</text></view>
-    <view class="intake-energy"><text>{{day.consumed.calories}}</text> kcal</view>
-    <view class="muted">蛋白 {{day.consumed.protein}} g · 碳水 {{day.consumed.carbs}} g · 脂肪 {{day.consumed.fat}} g</view>
-    <view class="muted">膳食纤维：{{day.consumed.fiberLabel}}</view>
-    <view class="meal-shortcuts"><button wx:for="{{day.meals}}" wx:key="name" class="meal-shortcut {{item.logged ? 'recorded' : ''}}" data-meal="{{index}}" bindtap="jumpMeal"><view>{{item.name}}</view><text>{{item.logged ? '已记录 ✓' : '去记录 ↓'}}</text></button></view>
-    <view class="muted">只合计已记录餐次。未记录不代表没吃，4 餐也不是打卡门槛。</view>
   </view>
   <button class="secondary space" bindtap="openLibrary">★ 我的常吃 · 一键加入食物 / 整餐</button>
   <view wx:if="{{!day}}" class="panel empty">
@@ -60,20 +60,22 @@
       <view class="topline"><view class="heading">{{meal.name}}</view><text class="badge">{{meal.logged ? '已记录' : '待记录'}}</text></view>
       <view class="muted">{{meal.calories}} kcal · 蛋白 {{meal.protein}} g · 碳水 {{meal.carbs}} g · 脂肪 {{meal.fat}} g</view><view class="muted">膳食纤维：{{meal.fiberLabel}}</view>
       <view wx:for="{{meal.foods}}" wx:for-item="food" wx:for-index="foodIndex" wx:key="rowKey" class="food-line">
-        <view class="topline"><view class="food-main"><view>{{food.name}} <text class="strong">{{food.grams}} {{food.unit || 'g'}}</text></view><view class="badge">{{food.state}}</view></view><button size="mini" class="small-button" disabled="{{meal.logged}}" data-meal="{{mealIndex}}" data-food="{{foodIndex}}" bindtap="openEditor">换菜 / 改量</button></view>
+        <view class="topline"><view class="food-main"><view>{{food.name}} <text class="strong">{{food.grams}} {{food.unit || 'g'}}</text></view><view class="badge">{{food.state}}</view></view><button size="mini" class="small-button" data-meal="{{mealIndex}}" data-food="{{foodIndex}}" bindtap="openEditor">修改 / 删除</button></view>
         <view class="muted">{{food.calories}} kcal · 蛋白 {{food.protein}} g · 碳水 {{food.carbs}} g · 脂肪 {{food.fat}} g</view><view class="muted">膳食纤维：{{food.fiberLabel}}</view>
+        <view wx:for="{{food.alerts}}" wx:key="*this" class="notice compact-notice">{{item}}</view>
         <view class="badge space">做法参考：{{food.cookingLabel}}</view>
         <view class="actions space"><button size="mini" class="small-button" data-meal="{{mealIndex}}" data-food="{{foodIndex}}" bindtap="collectFood">☆ 收藏食物</button><button size="mini" class="small-button" data-meal="{{mealIndex}}" data-food="{{foodIndex}}" bindtap="showCooking">做法与称重 →</button></view>
       </view>
       <view wx:if="{{!meal.foods.length}}" class="muted space">这餐暂无食物，请添加实际吃的食物。</view>
-      <view class="actions space"><button size="mini" class="small-button" data-meal="{{mealIndex}}" bindtap="collectMeal">保存为常吃搭配</button><button size="mini" class="small-button" disabled="{{meal.logged}}" data-meal="{{mealIndex}}" bindtap="openLibrary">从我的常吃添加</button></view>
+      <view wx:for="{{meal.alerts}}" wx:key="*this" class="notice compact-notice">{{item}}</view>
+      <view class="actions space"><button size="mini" class="small-button" data-meal="{{mealIndex}}" bindtap="collectMeal">保存为常吃搭配</button><button size="mini" class="small-button" data-meal="{{mealIndex}}" bindtap="openLibrary">从我的常吃添加</button></view>
       <view class="actions space"><button wx:if="{{mealIndex > 0}}" size="mini" class="small-button" disabled="{{meal.logged}}" data-meal="{{mealIndex}}" bindtap="copyPreviousMeal">复制上一餐</button><button size="mini" class="small-button" disabled="{{meal.logged}}" data-meal="{{mealIndex}}" bindtap="copyYesterdayMeal">复制昨日同餐</button></view>
-      <view class="actions space"><button class="secondary" disabled="{{meal.logged}}" data-meal="{{mealIndex}}" data-add="yes" bindtap="openEditor">＋ 添加食物</button><button class="{{meal.logged ? 'secondary' : 'primary'}}" data-meal="{{mealIndex}}" bindtap="toggleMeal">{{meal.logged ? '取消这餐记录' : '按以上食物记录这餐'}}</button></view>
+      <view class="actions space"><button class="secondary" data-meal="{{mealIndex}}" data-add="yes" bindtap="openEditor">＋ 添加食物</button><button class="{{meal.logged ? 'secondary' : 'primary'}}" data-meal="{{mealIndex}}" bindtap="toggleMeal">{{meal.logged ? '取消这餐记录' : '按以上食物记录这餐'}}</button></view>
       <view wx:if="{{mealFeedback && feedbackMeal === mealIndex}}" class="meal-feedback">
         <view>{{mealFeedback}}</view>
         <button wx:if="{{meal.logged && selectedDate === today && !habit.done}}" class="primary space" bindtap="goCheckin">去完成今日打卡 ↑</button>
       </view>
-      <view class="muted space">{{meal.logged ? '修改已吃食物：先取消记录，改完再记录。' : '没有全吃完？先改成实际克数再记录。额外用油也需添加。'}}</view>
+      <view class="muted space">{{meal.logged ? '已记录餐次也可直接增删食物或修改克数，保存后会自动更新当天合计。' : '没有全吃完？先改成实际克数再记录。额外用油也需添加。'}}</view>
     </view>
     <view wx:if="{{!day.diaryOnly}}" class="panel"><view class="heading">全天食谱与目标</view><view class="muted">食谱膳食纤维：{{day.planned.fiberLabel}}</view><view class="muted">包含待记录餐次，反映当前计划，不是已吃总量。</view><view class="topline food-line" wx:for="{{day.summary}}" wx:key="key"><text>{{item.label}}</text><text>{{item.planned}} / {{item.target}} {{item.unit}}（{{item.delta > 0 ? '+' : ''}}{{item.delta}}）</text></view><view class="muted">替换只保持所选的一项营养近似相等，其他营养会变化，请核对全天合计。</view></view>
   </block>
@@ -102,7 +104,7 @@
     <view wx:if="{{editor.custom}}" class="muted space">历史食物：{{editor.original.name}}（{{editor.original.state}}）。保留原营养数据，仅调整原单位份量；新食物从食物库选择。</view>
     <view class="label">实际吃的份量（{{editor.custom ? editor.form.unit : 'g'}}）</view><input class="input" type="digit" value="{{editor.grams}}" bindinput="onSwapGrams" placeholder="输入实际克数" />
     <view wx:if="{{editor.error}}" class="notice">{{editor.error}}</view>
-    <view wx:if="{{editor.preview}}" class="preview"><view class="strong">{{editor.preview.calories}} kcal · 蛋白 {{editor.preview.protein}} g</view><view>碳水 {{editor.preview.carbs}} g · 脂肪 {{editor.preview.fat}} g</view><view>膳食纤维：{{editor.preview.fiberLabel || '暂无数据'}}</view><view class="muted">{{editor.preview.note}}</view></view>
+    <view wx:if="{{editor.preview}}" class="preview"><view class="strong">{{editor.preview.calories}} kcal · 蛋白 {{editor.preview.protein}} g</view><view>碳水 {{editor.preview.carbs}} g · 脂肪 {{editor.preview.fat}} g</view><view>膳食纤维：{{editor.preview.fiberLabel || '暂无数据'}}</view><view class="muted">{{editor.preview.note}}</view><view wx:if="{{editor.preview.sourceLabel}}" class="muted">来源：{{editor.preview.sourceLabel}} · {{editor.preview.sourceId}}</view><view wx:for="{{editor.alerts}}" wx:key="*this" class="notice compact-notice">{{item}}</view></view>
     <view class="muted space">营养按所选食物、称重状态和克数计算，数值为近似参考；油和其他食材分别添加。</view>
     <button class="primary space" disabled="{{!editor.preview}}" bindtap="applyEditor">确认并更新整餐营养</button>
     <button wx:if="{{editor.original}}" class="secondary space" bindtap="removeEditorFood">移除这项食物</button>

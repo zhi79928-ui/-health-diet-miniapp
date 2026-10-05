@@ -5,6 +5,7 @@ const { cookingGuide } = require('../../utils/cooking');
 const reminders = require('../../utils/reminders');
 const { suggest } = require('../../utils/next-meal');
 const { labelPortion } = require('../../utils/label-foods');
+const { portionAlerts } = require('../../utils/nutrition-alerts');
 const { createDiary, setLabelFood } = require('../../utils/tracker');
 const { readCheckins, evidence, checkIn, statistics } = require('../../utils/habits');
 const { dateKey, validDate, previousDate, refreshDay, copyPlan, copyMeal, replaceFood, addFood, removeFood, toggleMeal, replacementGrams, readDays, saveDay } = require('../../utils/tracker');
@@ -125,8 +126,9 @@ Page({
       const item = readFavorites().find(row => row.id === event.currentTarget.dataset.id);
       if (!item) throw new Error('收藏已变化，请重新打开');
       const day = this.data.day || createDiary(this.data.selectedDate);
+      const wasLogged = day.meals[this.data.library.mealIndex].logged;
       this.persist(applyFavorite(day, this.data.library.mealIndex, item));
-      this.closeLibrary(); wx.showToast({ title: '已加入，吃完再记录', icon: 'none' });
+      this.closeLibrary(); wx.showToast({ title: wasLogged ? '已加入并更新当天合计' : '已加入，吃完再记录', icon: 'none' });
     } catch (error) { this.report(error); }
   },
   removeFavorite(event) {
@@ -241,14 +243,14 @@ Page({
       this.checkRollover();
       const mealIndex = Number(event.currentTarget.dataset.meal);
       const meal = this.data.day && this.data.day.meals[mealIndex];
-      if (!meal || meal.logged) throw new Error('已记录的餐请先取消记录，再修改实际食物');
+      if (!meal) throw new Error('请选择有效餐次');
       const adding = event.currentTarget.dataset.add === 'yes';
       const foodIndex = adding ? null : Number(event.currentTarget.dataset.food);
       const original = adding ? null : meal.foods[foodIndex];
       if (!adding && !original) throw new Error('请选择有效食物');
       const optionIndex = original ? options.findIndex(item => item.id === original.id) : options.findIndex(item => item.id === 'rice');
       this.setData({ foodCategory: 'all' });
-      this.setData({ foodOptions: options, foodQuery: '', editor: { mealIndex, foodIndex, original, optionIndex: Math.max(0, optionIndex), custom: !!(original && original.basis), form: original && original.basis ? { ...original.basis, calories: original.basis.estimated ? '' : String(original.basis.calories) } : { name: '', state: '即食净重', protein: '', carbs: '', fat: '', calories: '', unit: 'g', energyUnit: 'kcal' }, modeIndex: 2, grams: original ? String(original.grams) : '100', preview: null, error: '' } });
+      this.setData({ foodOptions: options, foodQuery: '', editor: { mealIndex, foodIndex, original, wasLogged: meal.logged, optionIndex: Math.max(0, optionIndex), custom: !!(original && original.basis), form: original && original.basis ? { ...original.basis, calories: original.basis.estimated ? '' : String(original.basis.calories) } : { name: '', state: '即食净重', protein: '', carbs: '', fat: '', calories: '', unit: 'g', energyUnit: 'kcal' }, modeIndex: 2, grams: original ? String(original.grams) : '100', preview: null, alerts: [], error: '' } });
       this.previewEditor(false);
     } catch (error) { this.report(error); }
   },
@@ -320,24 +322,26 @@ Page({
     if (!editor) return;
     try {
       if (editor.custom) {
-        this.setData({ 'editor.preview': labelPortion(editor.form, editor.grams), 'editor.error': '' }); return;
+        const preview = labelPortion(editor.form, editor.grams);
+        this.setData({ 'editor.preview': preview, 'editor.alerts': portionAlerts(preview), 'editor.error': '' }); return;
       }
       if (!this.data.foodOptions[editor.optionIndex]) throw new Error('暂无匹配食物，请换个名称或分类搜索');
       const id = this.data.foodOptions[editor.optionIndex].id;
       let grams = editor.grams;
       if (recalculate && editor.original && editor.modeIndex !== 2) grams = String(replacementGrams(editor.original, id, editor.modeIndex === 0 ? 'protein' : editor.modeIndex === 3 ? 'carbs' : 'calories'));
       const preview = foodPortion(id, grams);
-      this.setData({ 'editor.grams': grams, 'editor.preview': preview, 'editor.error': '' });
-    } catch (error) { this.setData({ 'editor.preview': null, 'editor.error': error.message }); }
+      this.setData({ 'editor.grams': grams, 'editor.preview': preview, 'editor.alerts': portionAlerts(preview), 'editor.error': '' });
+    } catch (error) { this.setData({ 'editor.preview': null, 'editor.alerts': [], 'editor.error': error.message }); }
   },
   applyEditor() {
     try {
       this.checkRollover();
       const e = this.data.editor;
       if (!e || !e.preview || e.error) throw new Error('请先填写有效食物和克数');
-      if (e.custom) { this.persist(setLabelFood(this.data.day, e.mealIndex, e.foodIndex, e.form, e.grams)); return; }
+      if (e.custom) { this.persist(setLabelFood(this.data.day, e.mealIndex, e.foodIndex, e.form, e.grams)); if (e.wasLogged) wx.showToast({ title: '已更新当天营养合计', icon: 'none' }); return; }
       const id = this.data.foodOptions[e.optionIndex].id;
       this.persist(e.original ? replaceFood(this.data.day, e.mealIndex, e.foodIndex, id, e.grams) : addFood(this.data.day, e.mealIndex, id, e.grams));
+      if (e.wasLogged) wx.showToast({ title: '已更新当天营养合计', icon: 'none' });
     } catch (error) { this.report(error); }
   },
   removeEditorFood() {
@@ -345,7 +349,9 @@ Page({
       this.checkRollover();
       const e = this.data.editor;
       if (!e || !e.original) return;
-      this.persist(removeFood(this.data.day, e.mealIndex, e.foodIndex));
+      const next = removeFood(this.data.day, e.mealIndex, e.foodIndex);
+      this.persist(next);
+      if (e.wasLogged) wx.showToast({ title: next.meals[e.mealIndex].logged ? '已删除并更新当天合计' : '食物已清空，餐次改为待记录', icon: 'none' });
     } catch (error) { this.report(error); }
   }
 });

@@ -22,7 +22,7 @@ function labelBasis(form) {
 function labelPortion(form, quantity) {
   const basis = labelBasis(form), amount = Number(quantity);
   if (!Number.isFinite(amount) || amount <= 0 || amount > 2000) throw new Error('请输入大于 0 且不超过 2000 的份量');
-  const row = { id: 'labelFood', ...basis, basis, grams: amount, note: basis.estimated ? '用户填写的营养标签；热量按蛋白/碳水 4、脂肪 9 kcal/g 估算' : '用户填写的营养标签；按每 100 ' + basis.unit + ' 计算' };
+  const row = { id: 'labelFood', ...basis, basis, grams: amount, sourceId: 'user-label', sourceLabel: '用户录入', note: basis.estimated ? '用户填写的营养标签；热量按蛋白/碳水 4、脂肪 9 kcal/g 估算' : '用户填写的营养标签；按每 100 ' + basis.unit + ' 计算' };
   keys.forEach(key => { row[key] = r1(basis[key] * amount / 100); });
   return row;
 }

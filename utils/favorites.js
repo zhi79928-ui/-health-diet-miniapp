@@ -39,10 +39,9 @@ function deleteFavorite(id) {
 function applyFavorite(day, mealIndex, favorite) {
   const next = refreshDay(day);
   if (!Number.isInteger(mealIndex) || !next.meals[mealIndex]) throw new Error('请选择餐次');
-  if (next.meals[mealIndex].logged) throw new Error('这餐已记录，请先取消记录再添加');
   checkFoods(favorite.foods);
   if (next.meals[mealIndex].foods.length + favorite.foods.length > 40) throw new Error('添加后超过每餐 40 项上限');
   next.meals[mealIndex].foods.push(...clone(favorite.foods));
-  return refreshDay(next); // 追加，不覆盖已有食物，也不自动标记吃过。
+  return refreshDay(next); // 追加并保留餐次原有记录状态。
 }
 module.exports = { readFavorites, saveFavorite, deleteFavorite, applyFavorite };
