@@ -57,10 +57,10 @@ function bounds(faces) {
   return {min,max};
 }
 for(const height of [120,175,195,220]) {
-  const shape=geometry.create({...base,height}),box=bounds(shape);
+  const shape=geometry.create({...base,height}),skin=shape.filter(f=>f.region!==4),box=bounds(skin);
   assert.ok(Math.abs(box.max[1]-height/100)<2e-4,'head matches input height');
   assert.equal(box.min[1],0,'feet stay on ground');
-  const projected=b.project(shape,0,0,1,380,590);
+  const projected=b.project(skin,0,0,1,380,590);
   let top=Infinity,bottom=-Infinity;
   for(const f of projected)for(const p of f.points){top=Math.min(top,p[1]);bottom=Math.max(bottom,p[1]);}
   assert.ok(Math.abs(bottom-590*.90)<.1,'same screen baseline');
@@ -71,7 +71,13 @@ for(const cm of [40,70,78,100,150,200]) {
   const d=geometry.dimensions({...base,waist:cm});
   assert.ok(Math.abs(geometry.circumference(d.waistX,d.waistZ)*100-cm)<1e-9);
   const faces=geometry.create({...base,waist:cm});
-  const ring=faces.flat().filter(p=>Math.abs(p[1]-1.75*.64)<.012&&Math.abs(p[0])<.4);
+  const source=geometry.source();
+  const ring=[];
+  for(let i=0;i<source.indices.length;i++) {
+    const original=source.points[source.indices[i]];
+    if(Math.abs(original[1]-1.75*.64)<.012&&Math.abs(original[0])<.18)
+      ring.push(faces[Math.floor(i/3)][i%3]);
+  }
   const width=Math.max(...ring.map(p=>p[0]))-Math.min(...ring.map(p=>p[0]));
   const depth=Math.max(...ring.map(p=>p[2]))-Math.min(...ring.map(p=>p[2]));
   assert.ok(width>previousWidth && depth>previousDepth,'waist grows in front and side views');
@@ -80,10 +86,26 @@ for(const cm of [40,70,78,100,150,200]) {
 const licensed=geometry.create({...base,sex:'female'}),licensedBox=bounds(licensed);
 assert.ok(licensed.length>25000,'continuous licensed mesh is present');
 assert.equal(licensed.source.license,'CC0-1.0');
-assert.ok(licensedBox.max[0]-licensedBox.min[0]<.8,'arms are lowered into a standing pose');
+assert.ok(licensedBox.max[0]-licensedBox.min[0]>.48&&licensedBox.max[0]-licensedBox.min[0]<.82,'arms rest naturally beside the body');
+// Measured waist changes must not pull either hand into the abdomen.
+const narrow=geometry.create({...base,waist:60}),wide=geometry.create({...base,waist:120});
+let handVertices=0;
+const source=geometry.source();
+for(let i=0;i<source.indices.length;i++) {
+ const original=source.points[source.indices[i]],j=i%3,face=Math.floor(i/3);
+ if(Math.abs(original[0])>.43&&original[1]/1.75>.35&&original[1]/1.75<.68){
+  assert.deepStrictEqual(narrow[face][j],wide[face][j],'waist leaves hands unchanged');
+  handVertices++;
+ }
+}
+assert.ok(handVertices>100,'both hands remain identifiable after posing');
 const gpu=geometry.buffers(geometry.create(base));
 assert.ok(gpu.every(Number.isFinite));
 assert.equal(gpu.length%7,0);
-for(let i=0;i<gpu.length;i+=7){const len=Math.hypot(gpu[i+3],gpu[i+4],gpu[i+5]);assert.ok(Math.abs(len-1)<1e-5 || len===0);assert.ok(gpu[i+6]>=0&&gpu[i+6]<=3);}
+for(let i=0;i<gpu.length;i+=7){const len=Math.hypot(gpu[i+3],gpu[i+4],gpu[i+5]);assert.ok(Math.abs(len-1)<1e-5 || len===0);assert.ok(gpu[i+6]>=0&&gpu[i+6]<=5);}
+for(const region of [0,1,2,3,4,5])assert.ok(licensed.some(f=>f.region===region),'all skin, garment, eye and hair regions exist');
+const hair=licensed.filter(f=>f.region===4);
+assert.ok(hair.length>100,'short hair geometry exists');
+assert.ok(hair.every(f=>f.every(p=>p[1]>1.6)),'hair stays on scalp');
 const shader=require('../utils/body-renderer');assert.ok(shader.VERTEX.includes('aRegion'));assert.ok(shader.FRAGMENT.includes('uHeight'));
 console.log('body proportions, fixed scale, measured waist and smooth normals passed');

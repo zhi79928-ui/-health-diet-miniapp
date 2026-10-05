@@ -32,29 +32,22 @@ function source() {
   if(base)return base;
   const packed=decode(asset.positions,Int16Array),indices=decode(asset.indices,Uint16Array),regions=decode(asset.regions,Uint8Array),points=[];
   for(let i=0;i<asset.vertexCount;i++)points.push([packed[i*3]/10000,packed[i*3+1]/10000,packed[i*3+2]/10000]);
-  // The neutral MakeHuman mesh uses a horizontal rest pose. Lower the arms
-  // into a relaxed standing pose, with a soft shoulder blend.
-  for(const p of points) {
-    const side=Math.sign(p[0]),ax=Math.abs(p[0]);
-    if(side && p[1]>.72 && p[1]<1.56 && ax>.155) {
-      const blend=smooth(.155,.255,ax)*smooth(.72,.92,p[1]);
-      const angle=-side*1.28*blend,pivotX=side*.17,pivotY=1.43;
-      const x=p[0]-pivotX,y=p[1]-pivotY,c=Math.cos(angle),s=Math.sin(angle);
-      p[0]=pivotX+x*c-y*s;p[1]=pivotY+x*s+y*c;
-    }
-  }
-  const waistBand=points.filter(p=>p[1]>1.09&&p[1]<1.15&&Math.abs(p[0])<.24);
+  // Keep rest-space coordinates. They are also used for stable garment and
+  // hand masks after the body has been reshaped and posed.
+  const waistBand=points.filter(p=>p[1]>1.09&&p[1]<1.15&&Math.abs(p[0])<.18);
   const waistX=Math.max(...waistBand.map(p=>Math.abs(p[0])));
   const zMin=Math.min(...waistBand.map(p=>p[2])),zMax=Math.max(...waistBand.map(p=>p[2]));
-  base={points,indices,regions,waistX,waistZ:(zMax-zMin)/2,waistCenterZ:(zMax+zMin)/2};
+  const eyes=new Set();
+  for(let i=0;i<indices.length;i++)if(regions[Math.floor(i/3)]===3)eyes.add(indices[i]);
+  base={points,indices,regions,eyes,waistX,waistZ:(zMax-zMin)/2,waistCenterZ:(zMax+zMin)/2};
   return base;
 }
 
 function create(m) {
   const d=dimensions(m),src=source(),female=d.sex==='female',H=d.height,S=d.scale,F=d.fullness;
   const points=src.points.map((original,index)=>{
-    let [x,y,z]=original;const yn=y/1.75,eye=index>=13380;
-    if(eye)return [x*S,y*S,z*S];
+    let [x,y,z]=original;const yn=y/1.75;
+    if(src.eyes.has(index)||yn>.88)return [x*S,y*S,z*S];
     // Weight changes the trunk most, limbs less. Sex changes shoulder/hip
     // distribution without pretending to infer anatomy from three numbers.
     const trunk=Math.exp(-Math.pow((yn-.64)/.20,4));
@@ -69,7 +62,7 @@ function create(m) {
     x*=xScale;z=src.waistCenterZ+(z-src.waistCenterZ)*zScale;
     // Waist is the one directly measured circumference. Blend it into the
     // surrounding abdomen so front and side views both react smoothly.
-    if(Math.abs(original[0])<.30) {
+    if(Math.abs(original[0])<.18) {
       const band=Math.exp(-Math.pow((yn-.64)/.065,2));
       const targetX=d.waistX/S,targetZ=d.waistZ/S;
       const currentX=src.waistX*xScale,currentZ=src.waistZ*zScale;
@@ -82,7 +75,21 @@ function create(m) {
       const chest=Math.exp(-Math.pow((yn-.75)/.055,2))*Math.exp(-Math.pow(x/.15,4));
       if(z>src.waistCenterZ)z+=.018*chest;
     }
-    return [x*S,y*S,z*S];
+    x*=S;y*=S;z*=S;
+    // The source is an A-pose. Rotate only the arms gently around the shoulder
+    // so the hands rest beside the thighs without dragging the chest inward.
+    const side=Math.sign(original[0]),ax=Math.abs(original[0]);
+    if(side&&original[1]>.64&&original[1]<1.53&&ax>.18) {
+      const arm=smooth(.18,.29,ax)*smooth(.64,.82,original[1]);
+      const angle=-side*.48*arm,pivotX=side*.185*S,pivotY=1.43*S;
+      const dx=x-pivotX,dy=y-pivotY,c=Math.cos(angle),s=Math.sin(angle);
+      x=pivotX+dx*c-dy*s;y=pivotY+dx*s+dy*c;
+      // The rest pose also reaches slightly forward. Bring the arm back in
+      // the sagittal plane so the palm falls beside the hip in side view.
+      const back=.28*arm,by=y-pivotY,bz=z,c2=Math.cos(back),s2=Math.sin(back);
+      y=pivotY+by*c2-bz*s2;z=by*s2+bz*c2;
+    }
+    return [x,y,z];
   });
   const faces=[];
   for(let i=0;i<src.indices.length;i+=3) {
@@ -90,13 +97,87 @@ function create(m) {
     const authored=src.regions[i/3];
     if(authored===3)face.region=3;
     else {
-      const cy=(face[0][1]+face[1][1]+face[2][1])/(3*H),cx=Math.abs((face[0][0]+face[1][0]+face[2][0])/3);
-      face.region=cy<.49?2:((cx<.30*S || cy>.72)&&cy<.82?1:0);
+      const originals=[src.points[src.indices[i]],src.points[src.indices[i+1]],src.points[src.indices[i+2]]];
+      const cy=originals.reduce((sum,p)=>sum+p[1],0)/(3*1.75);
+      const cx=Math.abs(originals.reduce((sum,p)=>sum+p[0],0)/3);
+      const hand=cx>.43&&cy>.35&&cy<.68;
+      if(hand||cy>=.90||(cy>=.82&&cx<.10))face.region=0; // exposed head, neck and hands
+      else if(cy>=.56)face.region=1; // long-sleeve top
+      else if(cy>=.06)face.region=2; // full-length trousers
+      else face.region=5;            // shoes
     }
     faces.push(face);
   }
+  addShortHair(faces,H);
   faces.dimensions=d;faces.source={name:asset.source,license:asset.license};
   return faces;
+}
+
+// Clip the scalp at a curved hairline. Sharing edge intersections keeps the
+// hair surface smooth; a small outward offset avoids flickering with the skin.
+function addShortHair(faces,height) {
+  const scale=height/1.75,raised=new Map(),edges=new Map(),ids=new Map();
+  let next=0;
+  const id=p=>{if(!ids.has(p))ids.set(p,next++);return ids.get(p);};
+  const distance=p=>{
+    const x=p[0]/scale,z=p[2]/scale;
+    const front=clamp((z+.025)/.09,0,1);
+    const line=1.625+.073*front*front+.012*Math.exp(-Math.pow((Math.abs(x)-.055)/.02,2));
+    return p[1]/scale-line;
+  };
+  const lift=p=>{
+    if(!raised.has(p)){
+      const x=p[0],y=p[1]-1.65*scale,z=p[2]+.025*scale,len=Math.hypot(x,y,z)||1;
+      const top=clamp((p[1]/scale-1.70)/.05,0,1);
+      raised.set(p,[x+.003*scale*x/len,p[1]+(.003*y/len+.007*top)*scale,p[2]+(.003*z/len+.004*top)*scale]);
+    }
+    return raised.get(p);
+  };
+  const cut=(a,b,da,db)=>{
+    const ai=id(a),bi=id(b),key=ai<bi?ai+':'+bi:bi+':'+ai;
+    if(!edges.has(key)){const t=da/(da-db);edges.set(key,a.map((v,k)=>v+(b[k]-v)*t));}
+    return edges.get(key);
+  };
+  const hair=[];
+  for(const face of faces){
+    if(face.region!==0||face.every(p=>p[1]<1.62*scale))continue;
+    const polygon=[];
+    for(let i=0;i<3;i++){
+      const a=face[i],b=face[(i+1)%3],da=distance(a),db=distance(b);
+      if(da>=0)polygon.push(a);
+      if((da>=0)!==(db>=0))polygon.push(cut(a,b,da,db));
+    }
+    for(let i=1;i<polygon.length-1;i++){
+      const triangle=[lift(polygon[0]),lift(polygon[i]),lift(polygon[i+1])];
+      triangle.region=4;hair.push(triangle);
+    }
+  }
+  // Short, tapered locks lean forward (+Z). Roots overlap the scalp cap;
+  // lengths vary deterministically so the silhouette is not a row of cones.
+  const anchors=[...raised.values()].filter(p=>p[1]>1.71*scale);
+  for(let row=0;row<2;row++)for(let lock=0;lock<7;lock++){
+    const x=(lock-3)*.016*scale,z=(row===0?.049:.012)*scale;
+    let root=null,best=Infinity;
+    for(const p of anchors){const score=(p[0]-x)**2+(p[2]-z)**2;if(score<best){best=score;root=p;}}
+    if(!root)continue;
+    const length=(.017+.006*Math.cos(lock*1.7+row))*scale;
+    const rings=[],sides=8;
+    for(let j=0;j<5;j++){
+      const t=j/4,r=.011*scale*Math.pow(1-t,.85)+.00015*scale;
+      const center=[root[0]+.003*scale*Math.sin(lock)*t,root[1]-.004*scale+length*t,root[2]+.020*scale*t*t];
+      rings.push(Array.from({length:sides},(_,k)=>{
+        const a=k*2*Math.PI/sides;
+        return [center[0]+r*Math.cos(a),center[1]-.45*r*Math.sin(a),center[2]+.75*r*Math.sin(a)];
+      }));
+    }
+    for(let j=0;j<4;j++)for(let k=0;k<sides;k++){
+      const n=(k+1)%sides;
+      for(const triangle of [[rings[j][k],rings[j+1][k],rings[j][n]],[rings[j][n],rings[j+1][k],rings[j+1][n]]]){
+        triangle.region=4;hair.push(triangle);
+      }
+    }
+  }
+  faces.push(...hair);
 }
 
 // Triangles share point objects, so averaging by object identity produces
