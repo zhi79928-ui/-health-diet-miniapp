@@ -1,24 +1,59 @@
 @import "../../styles/tracking.wxss";
 @import "../../styles/habits.wxss";
-.recommend-entry { border: 2rpx solid #d6e9dc; }
-.recommend-card { margin-top: 32rpx; padding: 30rpx 24rpx; border: 2rpx solid #dce8df; border-radius: 24rpx; background: #fbfdfb; }
-.recommend-food { margin-top: 22rpx; padding-top: 18rpx; border-top: 1rpx solid #e6eee8; font-size: 26rpx; line-height: 1.8; }
-.flow-header { margin: 20rpx 0 36rpx; }
+
+.flow-header { margin: 10rpx 0 24rpx; }
 .flow-header .title { margin-bottom: 0; }
+.header-actions { display: flex; align-items: center; gap: 12rpx; }
+.guide-button { width: 58rpx; min-width: 58rpx; height: 58rpx; margin: 0; padding: 0; border-radius: 50%; color: #236448; background: #edf5ef; font-size: 25rpx; line-height: 58rpx; }
 .guide-panel { border: 2rpx solid #dce9df; }
 .guide-step { display: flex; align-items: flex-start; gap: 24rpx; margin-top: 34rpx; line-height: 1.85; }
 .guide-step > view { flex: 1; min-width: 0; }
-.intake-energy { margin: 20rpx 0; color: #19684a; }
-.intake-energy > text { font-size: 60rpx; font-weight: 700; }
-.intake-energy .target-energy { font-size: 30rpx; color: #718078; font-weight: 500; }
-.dashboard-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 18rpx; margin: 24rpx 0; }
-.dashboard-grid > view { padding: 24rpx; border-radius: 20rpx; background: #f3f7ef; }
-.dashboard-value { display: block; color: #176843; font-size: 32rpx; font-weight: 750; }
-.next-meal-card { display: flex; align-items: center; justify-content: space-between; gap: 20rpx; margin-top: 26rpx; padding: 24rpx; border-radius: 20rpx; background: #edf5ef; }
+
+.daily-overview { margin-top: 22rpx; padding: 32rpx; }
+.overview-head { display: flex; justify-content: space-between; align-items: flex-end; gap: 24rpx; }
+.section-label { color: #718078; font-size: 24rpx; }
+.intake-energy { margin-top: 8rpx; color: #176843; line-height: 1.15; }
+.intake-energy > text:first-child { font-size: 62rpx; font-weight: 760; }
+.energy-unit { font-size: 26rpx; font-weight: 500; color: #536a5d; }
+.meal-count { flex-shrink: 0; text-align: right; color: #718078; font-size: 22rpx; }
+.meal-count > text { display: block; color: #176843; font-size: 42rpx; font-weight: 750; }
+.dashboard-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12rpx; margin: 26rpx 0 20rpx; }
+.dashboard-grid > view { min-width: 0; padding: 20rpx 12rpx; border-radius: 18rpx; background: #f3f7ef; text-align: center; }
+.dashboard-value { display: block; color: #176843; font-size: 27rpx; font-weight: 750; white-space: nowrap; }
+.metric-label { display: block; margin-top: 6rpx; color: #718078; font-size: 21rpx; }
+.next-meal-card { display: flex; align-items: center; justify-content: space-between; gap: 18rpx; padding: 20rpx 22rpx; border-radius: 18rpx; background: #edf5ef; }
 .next-meal-card > view { flex: 1; min-width: 0; }
-.compact-notice { padding: 18rpx 20rpx; margin: 18rpx 0 0; }
-.meal-shortcuts { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 18rpx; margin: 30rpx 0; }
-.meal-shortcut { width: 100%; margin: 0; padding: 22rpx 10rpx; background: #f3f6f2; color: #52685b; font-size: 28rpx; line-height: 1.8; }
-.meal-shortcut text { font-size: 24rpx; }
-.meal-shortcut.recorded { background: #e7f2eb; color: #19684a; }
-.meal-feedback { margin-top: 30rpx; padding: 30rpx; background: #edf5ef; color: #245d46; border-radius: 22rpx; line-height: 1.85; }
+.mini-note { margin-top: 6rpx; color: #718078; font-size: 22rpx; line-height: 1.55; }
+.compact-notice { padding: 16rpx 18rpx; margin: 14rpx 0 0; }
+.meal-shortcuts { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 10rpx; margin: 22rpx 0 0; }
+.meal-shortcut { width: 100%; min-width: 0; margin: 0; padding: 15rpx 4rpx; border-radius: 14rpx; background: #f3f6f2; color: #52685b; font-size: 24rpx; line-height: 1.5; }
+.meal-shortcut text { display: block; font-size: 19rpx; white-space: nowrap; }
+.meal-shortcut.recorded { background: #e4f1e8; color: #19684a; }
+
+.compact-habit { display: flex; align-items: center; justify-content: space-between; gap: 20rpx; padding: 26rpx 28rpx; }
+.compact-habit > view:first-child { flex: 1; min-width: 0; }
+.compact-habit .heading { font-size: 28rpx; }
+.checkin-button { flex-shrink: 0; min-width: 118rpx; margin: 0; padding: 16rpx 22rpx; border-radius: 16rpx; color: white; background: #1b6848; font-size: 25rpx; line-height: 1.5; }
+.checkin-button[disabled] { color: #789083; background: #e9f0eb; }
+.quick-actions { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12rpx; margin: 24rpx 0 12rpx; }
+.quick-actions button { min-width: 0; margin: 0; padding: 18rpx 5rpx; border-radius: 16rpx; font-size: 23rpx; line-height: 1.6; }
+
+.meal-card { padding: 0; overflow: hidden; }
+.meal-card-head { padding: 30rpx 30rpx 28rpx; }
+.meal-title-row { display: flex; align-items: center; gap: 12rpx; }
+.meal-title-row .heading { flex: 1; }
+.status-dot { width: 14rpx; height: 14rpx; border-radius: 50%; background: #d2dad5; }
+.status-dot.done { background: #299265; }
+.status-text { color: #718078; font-size: 23rpx; }
+.meal-card-summary { display: flex; align-items: center; gap: 20rpx; margin-top: 14rpx; color: #718078; font-size: 23rpx; }
+.expand-label { margin-left: auto; color: #246446; }
+.meal-details { padding: 0 30rpx 32rpx; border-top: 1rpx solid #edf2ef; }
+.nutrition-line { padding-top: 22rpx; color: #718078; font-size: 23rpx; line-height: 1.7; }
+.meal-feedback { margin-top: 24rpx; padding: 24rpx; background: #edf5ef; color: #245d46; border-radius: 18rpx; line-height: 1.75; }
+
+.recommend-card { margin-top: 32rpx; padding: 30rpx 24rpx; border: 2rpx solid #dce8df; border-radius: 24rpx; background: #fbfdfb; }
+.recommend-food { margin-top: 22rpx; padding-top: 18rpx; border-top: 1rpx solid #e6eee8; font-size: 26rpx; line-height: 1.8; }
+.footer-tools { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12rpx; margin-top: 36rpx; }
+.footer-tools button { min-width: 0; margin: 0; padding: 14rpx 4rpx; color: #567064; background: transparent; font-size: 22rpx; line-height: 1.6; }
+.footer-tools button::after, .guide-button::after { border: none; }
+.page-footnote { margin: 18rpx 0 8rpx; color: #92a097; font-size: 21rpx; text-align: center; }

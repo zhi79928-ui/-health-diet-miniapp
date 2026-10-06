@@ -12,7 +12,7 @@ const { dateKey, validDate, previousDate, refreshDay, copyPlan, copyMeal, replac
 const options = Object.keys(FOODS).map(id => ({ id, label: `${FOODS[id].name} · ${FOODS[id].state}` }));
 Page({
   data: { today: dateKey(), selectedDate: dateKey(), day: null, error: '', editor: null, foodOptions: options,
-    library: null, favoriteDraft: null, recipe: null, mealNames: ['早餐', '午餐', '加餐', '晚餐'], foodCategory: 'all', habit: {}, tasks: {}, habitError: '', swapModes: ['尽量保持蛋白质', '尽量保持热量', '手动填写克数', '尽量保持碳水（换主食）'] },
+    library: null, favoriteDraft: null, recipe: null, expandedMeal: -1, mealNames: ['早餐', '午餐', '加餐', '晚餐'], foodCategory: 'all', habit: {}, tasks: {}, habitError: '', swapModes: ['尽量保持蛋白质', '尽量保持热量', '手动填写克数', '尽量保持碳水（换主食）'] },
   onShow() {
     this.setData({ recommendation: null });
     try { this.setData({ guideOpen: wx.getStorageSync('diaryGuideSeenV1') !== true }); }
@@ -91,7 +91,15 @@ Page({
   goCheckin() { wx.pageScrollTo({ selector: '#daily-checkin', duration: 300 }); },
   jumpMeal(event) {
     const index = Number(event.currentTarget.dataset.meal);
-    if (this.data.day && Number.isInteger(index) && index >= 0 && index < 4) wx.pageScrollTo({ selector: '#meal-' + index, duration: 300 });
+    if (this.data.day && Number.isInteger(index) && index >= 0 && index < 4) {
+      this.setData({ expandedMeal: index });
+      wx.pageScrollTo({ selector: '#meal-' + index, duration: 300 });
+    }
+  },
+  toggleMealDetails(event) {
+    const index = Number(event.currentTarget.dataset.meal);
+    if (!this.data.day || !Number.isInteger(index) || index < 0 || index >= this.data.day.meals.length) return;
+    this.setData({ expandedMeal: this.data.expandedMeal === index ? -1 : index });
   },
   completeCheckin() {
     try { checkIn(this.data.today); this.loadHabits(); this.syncReminderCheckin(); wx.showToast({ title: '今天的一小步，已记下', icon: 'none' }); }
@@ -101,7 +109,7 @@ Page({
     try {
       if (!validDate(selectedDate) || selectedDate > dateKey()) throw new Error('请选择今天或之前的日期');
       const days = readDays();
-      this.setData({ today: dateKey(), selectedDate, day: days[selectedDate] ? refreshDay(days[selectedDate]) : null, error: '', editor: null, mealFeedback: '' });
+      this.setData({ today: dateKey(), selectedDate, day: days[selectedDate] ? refreshDay(days[selectedDate]) : null, error: '', editor: null, expandedMeal: -1, mealFeedback: '' });
     } catch (error) { this.setData({ day: null, editor: null, error: error.message || '读取失败，请保留本地数据并重试' }); }
   },
   onDateChange(event) { this.loadDay(event.detail.value); },
@@ -248,6 +256,7 @@ Page({
       const foodIndex = adding ? null : Number(event.currentTarget.dataset.food);
       const original = adding ? null : meal.foods[foodIndex];
       if (!adding && !original) throw new Error('请选择有效食物');
+      this.setData({ expandedMeal: mealIndex });
       const optionIndex = original ? options.findIndex(item => item.id === original.id) : options.findIndex(item => item.id === 'rice');
       this.setData({ foodCategory: 'all' });
       this.setData({ foodOptions: options, foodQuery: '', editor: { mealIndex, foodIndex, original, wasLogged: meal.logged, optionIndex: Math.max(0, optionIndex), custom: !!(original && original.basis), form: original && original.basis ? { ...original.basis, calories: original.basis.estimated ? '' : String(original.basis.calories) } : { name: '', state: '即食净重', protein: '', carbs: '', fat: '', calories: '', unit: 'g', energyUnit: 'kcal' }, modeIndex: 2, grams: original ? String(original.grams) : '100', preview: null, alerts: [], error: '' } });

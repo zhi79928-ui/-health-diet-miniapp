@@ -19,6 +19,7 @@ fail = false; screen.toggleMeal(tap(0)); assert.equal(screen.data.day.completed,
 assert.equal(screen.data.habit.done, false); assert.match(screen.data.mealFeedback, /现在可以完成今日打卡/);
 screen.goCheckin(); assert.equal(destination, '#daily-checkin');
 screen.jumpMeal(tap(0)); assert.equal(destination, '#meal-0');
+assert.equal(screen.data.expandedMeal, 0); screen.toggleMealDetails(tap(0)); assert.equal(screen.data.expandedMeal, -1);
 screen.jumpMeal(tap('bad')); assert.equal(destination, '#meal-0');
 screen.completeCheckin(); assert.equal(screen.data.habit.done, true);
 screen.toggleMeal(tap(0)); assert.match(screen.data.mealFeedback, /已取消/);
